@@ -1718,7 +1718,7 @@
           <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
             <span class="sub" id="knSelInfo">Tick video muốn tải riêng (bỏ trống = dùng nút "Tải + render" phía trên, tự lấy video cũ nhất).</span>
             <button class="btn" id="knSelTaiBtn" style="display:none;background:var(--accent2)" onclick="knTaiDaChon()">⚡ Tải + render video đã chọn</button>
-            <button class="btn go" id="knSelSaveBtn" style="display:none" onclick="knDsOpenCreate()" title="Lưu các video đã tick thành 1 danh sách — bấm vào danh sách sau này sẽ tự tick lại đúng các video này để render (KHÁC LoHa Page — nơi chọn video để ĐĂNG)">🆕 Tạo danh sách</button>
+            <button class="btn go" id="knSelSaveBtn" style="display:none" onclick="knDsOpenCreate()" title="Lưu các video đã tick thành 1 danh sách — bấm vào danh sách sau này sẽ tự tick lại đúng các video này để render (KHÁC LLN Page — nơi chọn video để ĐĂNG)">🆕 Tạo danh sách</button>
             <button class="chip-add" id="knSelBoBtn" style="display:none" onclick="knSelBoChon()">✕ Bỏ chọn</button>
           </div>
           <div class="sub" style="margin:0 0 8px">📋 <b>Danh sách đã lưu</b> (bấm để tự tick lại video render): <span id="knDsBox" style="display:inline"></span></div>
@@ -1726,7 +1726,7 @@
         </div>
       </div>
 
-      <!-- Modal: TẠO DANH SÁCH (lưu video đã tick để chọn nhanh lại — RENDER, khác LoHa Page là chọn để ĐĂNG) -->
+      <!-- Modal: TẠO DANH SÁCH (lưu video đã tick để chọn nhanh lại — RENDER, khác LLN Page là chọn để ĐĂNG) -->
       <div id="knDsModal" class="hidden" style="position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)knDsCloseCreate()">
         <div class="panel" style="max-width:460px;width:95%">
           <b style="font-size:16px">🆕 Tạo danh sách</b>
@@ -1894,7 +1894,7 @@
         <h1 class="page">📤 Đăng bài theo trang<span class="help" data-tip="Mỗi TRANG = 1 Page Facebook. Chọn nguồn video cho trang: KÊNH (video render của kênh) và/hoặc THỂ LOẠI (folder phân loại đã có video render). Bấm Gom → video + caption tự đẩy vào folder Page để LLN Page đăng.">?</span></h1>
         <div class="panel" style="margin:10px 0;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(214,161,42,.1),rgba(245,192,56,.05))">
           <div style="font-size:15px;font-weight:800;margin-bottom:6px">📣 Đăng Facebook TỰ ĐỘNG qua <b>LLN Page</b></div>
-          <div class="sub" style="margin:0">Mỗi <b>trang</b> = 1 Page Facebook. Chọn <b>Kênh</b> (Kiểu 1) và/hoặc <b>Thể loại</b> (Kiểu 2 — folder phân loại đã có video render) → bấm <b>Gom</b>: video + caption tự đẩy vào <code>&lt;Tên trang&gt;_&lt;Page ID&gt;/</code> để LLN Page đăng. Cần cài <b>LoHa Page</b> để đăng.</div>
+          <div class="sub" style="margin:0">Mỗi <b>trang</b> = 1 Page Facebook. Chọn <b>Kênh</b> (Kiểu 1) và/hoặc <b>Thể loại</b> (Kiểu 2 — folder phân loại đã có video render) → bấm <b>Gom</b>: video + caption tự đẩy vào <code>&lt;Tên trang&gt;_&lt;Page ID&gt;/</code> để LLN Page đăng. Cần cài <b>LLN Page</b> để đăng.</div>
           <div style="margin-top:8px;font-size:13.5px">👉 <b>LLN Page:</b> 📞 <a href="tel:0394426246" style="color:var(--accent);font-weight:800;text-decoration:none">0394.426.246</a> · 🌐 <a href="https://lohatech.vn/san-pham/loha-page" target="_blank" rel="noopener" style="color:var(--accent);font-weight:800">lohatech.vn</a></div>
         </div>
         <div class="panel" style="margin:10px 0">
@@ -4786,7 +4786,7 @@ async function knImport(){
 async function knSaveLohaDir(){
   const path=(document.getElementById("knLohaDir").value||"").trim();
   const r=await post("/api/kn_loha_dir",{path});
-  const m=document.getElementById("knLohaMsg"); m.textContent=r.ok?"✔ Đã lưu thư mục LohaPage.":"Lỗi lưu."; m.style.color=r.ok?"var(--accent2)":"red";
+  const m=document.getElementById("knLohaMsg"); m.textContent=r.ok?"✔ Đã lưu thư mục LLN Page.":"Lỗi lưu."; m.style.color=r.ok?"var(--accent2)":"red";
   setTimeout(()=>{m.textContent="";},3000);
 }
 async function knOpen(kid){
@@ -5368,7 +5368,7 @@ function dbRender(){
         <button class="chip-add" style="margin-left:auto" onclick="dbXoaTrang(${i})">🗑 Xóa trang</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <input class="num db-pid" style="width:230px" value="${esc(tr.page_id||"")}" oninput="dbTrang[${i}].page_id=this.value.trim();dbPidChk(this)" placeholder="Page ID Facebook (≥5 số) — cho LoHa">
+        <input class="num db-pid" style="width:230px" value="${esc(tr.page_id||"")}" oninput="dbTrang[${i}].page_id=this.value.trim();dbPidChk(this)" placeholder="Page ID Facebook (≥5 số) — cho LLN">
         <input class="num" style="flex:1;min-width:220px" value="${esc((tr.hashtag||[]).join(' '))}" oninput="dbTrang[${i}].hashtag=this.value.split(/[ ,]+/).filter(Boolean)" placeholder="Hashtag (cách dấu cách) — vd #review #phim">
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
@@ -5392,7 +5392,7 @@ function dbPidChk(el){
   const v=(el.value||"").trim();
   const bad=v && !/^\d{5,}$/.test(v);                  // có nhập mà KHÔNG phải ≥5 chữ số → LoHa sẽ bỏ qua
   el.style.borderColor=bad?"#e74c3c":"";
-  el.title=bad?"Page ID phải là ≥5 chữ SỐ — LoHa sẽ BỎ QUA folder nếu sai":"";
+  el.title=bad?"Page ID phải là ≥5 chữ SỐ — LLN sẽ BỎ QUA folder nếu sai":"";
 }
 function dbChon(i,field,title,ds,chon){
   const set=new Set(chon);
@@ -5459,11 +5459,11 @@ async function dbImportTheLoai(){
 function dbShowPick(id){ const m=document.getElementById(id); if(m){ m.style.display="flex"; } }
 function dbClosePick(id){ const m=document.getElementById(id); if(m){ m.style.display="none"; } dbRender(); }
 function dbXoaTrang(i){ if(confirm("Xóa trang này khỏi cấu hình? (folder dang_bai đã gom KHÔNG bị xóa)")){ dbTrang.splice(i,1); dbRender(); } }
-async function dbAutoDetectLoha(manual){   // tự tìm thư mục uploads LoHa trên máy
+async function dbAutoDetectLoha(manual){   // tự tìm thư mục uploads LLN trên máy
   let path=""; try{ const r=await (await fetch("/api/loha_auto_dir")).json(); path=r.path||""; }catch(e){}
   const ld=document.getElementById("dbLohaDir"), m=document.getElementById("dbLohaMsg");
-  if(path){ if(ld) ld.value=path; dbSaveLohaDir(); if(m){ m.textContent="✔ Đã tự dò + nối LoHa"; m.style.color="var(--accent2)"; setTimeout(()=>{m.textContent="";},4000); } }
-  else if(manual && m){ m.textContent="⚠ Chưa thấy LoHa Page trên máy — cài LoHa rồi bấm lại, hoặc dán đường dẫn tay."; m.style.color="#f88"; }
+  if(path){ if(ld) ld.value=path; dbSaveLohaDir(); if(m){ m.textContent="✔ Đã tự dò + nối LLN"; m.style.color="var(--accent2)"; setTimeout(()=>{m.textContent="";},4000); } }
+  else if(manual && m){ m.textContent="⚠ Chưa thấy LLN Page trên máy — cài LLN rồi bấm lại, hoặc dán đường dẫn tay."; m.style.color="#f88"; }
 }
 function dbAutoPayload(){   // gộp mọi cấu hình auto để lưu 1 lần (khỏi mất khi lưu riêng lẻ)
   const g=id=>document.getElementById(id)||{};

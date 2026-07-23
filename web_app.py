@@ -415,7 +415,7 @@ def _la_loha_path(path):
 
 def _loi_lohapage():
     return {"ok": False, "loi_quyen": True, "lohapage": False,
-            "msg": "Tính năng này thuộc LohaPage — cần mua/mở khoá LohaPage để dùng Kênh nguồn & Đăng bài."}
+            "msg": "Tính năng này thuộc LLN Page — cần mua/mở khoá LLN Page để dùng Kênh nguồn & Đăng bài."}
 
 LIMITS = {
     # FREE = dùng thử 7 ngày: cào 3/ngày, lồng tiếng 1 video ≤1 phút; băm/quy-trình/theo-dõi/AI KHOÁ.
