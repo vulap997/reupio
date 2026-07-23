@@ -156,7 +156,7 @@ Video cào và video đã render nằm **ngoài thư mục cài** — sống só
 
 ## Nâng cấp gói
 
-Liên hệ Zalo **0865.060.530** hoặc vào tab "Gói của tôi" trong app → "Nâng Cấp Gói".
+Liên hệ Zalo **0394.426.246** hoặc vào tab "Gói của tôi" trong app → "Nâng Cấp Gói".
 
 * **Gói Tháng (Cơ bản):** **299.000đ / tháng**. Tặng kèm video hướng dẫn sử dụng cơ bản.
 * **Gói Năm (Mở rộng):** **999.000đ / năm**. Tặng kèm video hướng dẫn + **Bộ 3 Quà Tặng Độc Quyền**.

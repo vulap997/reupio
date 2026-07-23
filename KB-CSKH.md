@@ -1,7 +1,7 @@
 # KB CHĂM SÓC KHÁCH HÀNG — reupo douyin+ (LLN-app)
 
 > **Tài liệu tri thức (knowledge base) cho AI trả lời khách hàng.**
-> Trả lời khách bằng **tiếng Việt**, thân thiện, ngắn gọn. Chỉ dùng thông tin trong file này; nếu không chắc thì hướng dẫn khách liên hệ Zalo hỗ trợ **0865.060.530**.
+> Trả lời khách bằng **tiếng Việt**, thân thiện, ngắn gọn. Chỉ dùng thông tin trong file này; nếu không chắc thì hướng dẫn khách liên hệ Zalo hỗ trợ **0394.426.246**.
 > Tên kỹ thuật của sản phẩm là `LLN-app`.
 > Phiên bản hiện tại: **v1.3.7**. Chỉ chạy trên **Windows 10/11 (64-bit)**.
 
@@ -12,7 +12,7 @@
 - Tên sản phẩm hiển thị: **reupo douyin+**. Tên kỹ thuật là **LLN-app** (LLN APP.exe, lln-app) — nếu khách thấy chữ "LLN-app" thì đó là **đúng sản phẩm**, không phải nhầm.
 - Đây là **tool desktop cho Windows**, KHÔNG có app điện thoại, KHÔNG có bản web online. Khách hỏi "dùng trên điện thoại/Mac được không?" → **không**, chỉ Windows 10/11 64-bit.
 - Nhiều lỗi "cào 0 video" là do **nền tảng chặn (anti-bot / hết phiên đăng nhập)**, KHÔNG phải lỗi tool. Luôn hướng khách kiểm tra đăng nhập trước.
-- Khi khách muốn **mua/gia hạn/nâng cấp** → hướng tới Zalo **0865.060.530** hoặc tab **"Gói của tôi" → "Nâng Cấp Gói"** trong app.
+- Khi khách muốn **mua/gia hạn/nâng cấp** → hướng tới Zalo **0394.426.246** hoặc tab **"Gói của tôi" → "Nâng Cấp Gói"** trong app.
 - Không hứa tính năng chưa có. Không tư vấn cách lách giới hạn gói, crack, hay né bản quyền.
 
 ---
@@ -99,7 +99,7 @@ Khi khách hàng mua Gói Năm hoặc Gói Vĩnh Viễn, họ sẽ được tặ
 ## 4. CÁCH MUA / NÂNG CẤP GÓI
 
 1. Trong app: mở tab **"Gói của tôi"** → bấm **"Nâng Cấp Gói"** (hoặc tab **"Bảng Giá"** để so sánh).
-2. Liên hệ **Zalo: 0865.060.530** để được cấp/kích hoạt gói.
+2. Liên hệ **Zalo: 0394.426.246** để được cấp/kích hoạt gói.
 3. Sau khi được cấp gói trên hệ thống, trong app bấm **"Làm mới gói"** (tab "Gói của tôi") để đồng bộ ngay — không cần cài lại, không cần khởi động lại máy.
 4. Nếu bấm "Làm mới gói" báo **offline** → kiểm tra mạng rồi thử lại (app cần kết nối để đồng bộ gói với máy chủ).
 
@@ -116,7 +116,7 @@ Khi khách hàng mua Gói Năm hoặc Gói Vĩnh Viễn, họ sẽ được tặ
 ### Thông báo khách có thể gặp về license:
 | Thông báo | Nghĩa & cách xử lý |
 |-----------|--------------------|
-| "**Mã kích hoạt này đã được gắn với một máy khác. Mỗi mã kích hoạt chỉ dùng được trên 1 máy.**" | Mã kích hoạt đã bị khóa vào máy khác. Muốn chuyển sang máy mới → liên hệ Zalo **0865.060.530** để admin **gỡ thiết bị** rồi kích hoạt lại trên máy mới. |
+| "**Mã kích hoạt này đã được gắn với một máy khác. Mỗi mã kích hoạt chỉ dùng được trên 1 máy.**" | Mã kích hoạt đã bị khóa vào máy khác. Muốn chuyển sang máy mới → liên hệ Zalo **0394.426.246** để admin **gỡ thiết bị** rồi kích hoạt lại trên máy mới. |
 | "**Máy này đã được kích hoạt với một mã khác. Mỗi máy chỉ dùng được 1 mã kích hoạt.**" | Máy đã gắn mã kích hoạt khác. Dùng lại đúng mã cũ, hoặc nhờ admin gỡ thiết bị cũ. |
 | "**Bản dùng thử FREE đã hết 7 ngày. Nâng cấp để tiếp tục thao tác.**" | Hết 7 ngày dùng thử → mua mã kích hoạt Gói Tháng/Năm/Vĩnh viễn để tiếp tục. |
 
@@ -280,7 +280,7 @@ Cách xử lý chung: **đợi sang ngày mới** (với giới hạn theo ngày
 
 ## 13. LIÊN HỆ HỖ TRỢ
 
-- **Zalo hỗ trợ / mua gói / gỡ thiết bị: 0865.060.530**
+- **Zalo hỗ trợ / mua gói / gỡ thiết bị: 0394.426.246**
 - Trong app: tab **"Gói của tôi"** (xem gói, nâng cấp, làm mới) và tab **"Cài đặt"**.
 
 ---
@@ -291,7 +291,7 @@ Cách xử lý chung: **đợi sang ngày mới** (với giới hạn theo ngày
 - **Hỏi: Tải YouTube/TikTok/Facebook có cần đăng nhập không?** → Không. Chỉ Douyin/Bili/XHS/RedNote cần quét QR.
 - **Hỏi: Cào 0 video là lỗi tool à?** → Thường không. Do hết phiên đăng nhập hoặc nền tảng chặn tạm. Đăng nhập lại + thử lại sau vài phút.
 - **Hỏi: Mua gói bao nhiêu tiền?** → Gói Tháng giá 299.000đ/tháng. Gói Năm giá 999.000đ/năm. Gói Vĩnh Viễn giá 1.799.000đ/trọn đời. Khi mua Gói Năm và Vĩnh Viễn sẽ được tặng kèm bộ 3 quà tặng reup độc quyền. Xem chi tiết tại mục 3.2.
-- **Hỏi: Đổi sang máy mới thì mã kích hoạt còn dùng được không?** → Cần admin gỡ thiết bị cũ trên Google Sheet (Zalo 0865.060.530) rồi nhập mã kích hoạt lại trên máy mới.
+- **Hỏi: Đổi sang máy mới thì mã kích hoạt còn dùng được không?** → Cần admin gỡ thiết bị cũ trên Google Sheet (Zalo 0394.426.246) rồi nhập mã kích hoạt lại trên máy mới.
 - **Hỏi: Trợ lý AI có ở Gói Tháng không?** → Không, các tính năng mở rộng (Trợ lý AI, không giới hạn lồng tiếng) chỉ hỗ trợ từ Gói Năm và Gói Vĩnh Viễn trở lên.
 - **Hỏi: Video có bị mất khi cập nhật tool không?** → Không, lưu ngoài thư mục cài.
 - **Hỏi: Vì sao lồng tiếng/render chậm?** → Máy không có GPU NVIDIA. Bình thường. Dùng giọng "ViralVoice — Tiêu chuẩn" hoặc máy có GPU để nhanh hơn.
