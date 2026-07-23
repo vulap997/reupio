@@ -292,6 +292,15 @@
   body.light .pbar{background:#e3e8f2}
   body.light .fcard video{background:#000}
   body.light ::-webkit-scrollbar-thumb{background:#c3cde0}
+  /* Logo sáng/tối */
+  body.light .brand .logo{filter:invert(1) hue-rotate(180deg);box-shadow:0 3px 16px rgba(0,0,0,.25)}
+  /* Chỉnh màu panel bên phải và các nút cho đỡ bị chìm */
+  body.light .btn.ghost{background:#f8fafc;border-color:#cbd5e1;color:#334155}
+  body.light .btn.ghost:hover{background:#f1f5f9;border-color:#94a3b8;color:#0f172a}
+  body.light .cao-prog .bar{background:#e2e8f0}
+  body.light #caoProgPct{color:#4f46e5 !important}
+  body.light .chip-add{background:#f8fafc;border-color:#cbd5e1;color:#475569}
+  body.light .chip-add:hover{background:#f1f5f9;border-color:#94a3b8;color:#0f172a}
 
   /* Suggest cards */
   .kcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:9px;margin-top:12px;max-height:480px;overflow-y:auto}
@@ -6912,8 +6921,8 @@ async function tqLoad(){
       act+=`<span onclick="tqRemove(${t.id})" title="Xoá" style="cursor:pointer;color:var(--muted);padding:0 4px">✕</span>`;
     }
     const bar=(t.trang_thai==="dang"&&t.pct>0)
-      ?`<div style="height:3px;background:#1a2238;border-radius:2px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100,t.pct)}%;background:#a78bff;transition:width .4s"></div></div>`:"";
-    return `<div style="padding:7px 9px;background:#0e1424;border:1px solid var(--line);border-radius:8px">
+      ?`<div style="height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100,t.pct)}%;background:#a78bff;transition:width .4s"></div></div>`:"";
+    return `<div style="padding:7px 9px;background:var(--card2);border:1px solid var(--line);border-radius:8px">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="color:${col};font-size:12px;font-weight:700;white-space:nowrap">${_tqLbl(t.trang_thai)}</span>
         <span style="flex:1;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.nhan||t.input||t.kind||"")}</span>
