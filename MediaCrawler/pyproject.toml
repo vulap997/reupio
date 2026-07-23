@@ -1,0 +1,97 @@
+[project]
+name = "mediacrawler"
+author = "程序员阿江-Relakkes <relakkes@gmail.com>"
+version = "0.1.0"
+description = "A social media crawler project, support Xiaohongshu, Weibo, Zhihu, Bilibili, Douyin, BaiduTieBa etc."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiofiles~=23.2.1",
+    "aiomysql==0.2.0",
+    "aiosqlite>=0.21.0",
+    "alembic>=1.16.5",
+    "asyncmy>=0.2.10",
+    "cryptography>=45.0.7",
+    "fastapi==0.110.2",
+    "httpx==0.28.1",
+    "jieba==0.42.1",
+    "matplotlib==3.9.0",
+    "motor>=3.3.0",
+    "opencv-python>=4.11.0.86",
+    "pandas==2.2.3",
+    "parsel==1.9.1",
+    "pillow==9.5.0",
+    "playwright==1.45.0",
+    "pydantic==2.5.2",
+    "pyexecjs==1.5.1",
+    "pyhumps>=3.8.0",
+    "python-dotenv==1.0.1",
+    "redis~=4.6.0",
+    "requests==2.32.3",
+    "sqlalchemy>=2.0.43",
+    "tenacity==8.2.2",
+    "typer>=0.12.3",
+    "uvicorn==0.29.0",
+    "wordcloud==1.9.3",
+    "pre-commit>=3.5.0",
+    "openpyxl>=3.1.2",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "websockets>=15.0.1",
+    "asyncpg>=0.31.0",
+    "xhshow>=0.1.9",
+    # --- Lồng tiếng (core, nhẹ): dịch + giọng nói tiếng Việt, không LLM ---
+    "faster-whisper>=1.0.0",
+    "edge-tts>=6.1.10",
+    "gtts>=2.5.0",          # dự phòng khi edge-tts bị throttle 'No audio'
+    "pydub>=0.25.1",        # _tts_edge_wav/_tts_gtts_wav: convert mp3 TTS -> wav 24k (thieu -> long tieng crash ma 1)
+    "piper-tts>=1.4.0",     # long_tieng_piper: TTS ONNX OFFLINE vo han (~8x realtime CPU); giong vi_VN tu tai 1 lan
+    "gdown>=5.0.0",         # giong_piper.tai: tai giong Piper NghiTTS (Banmai + Ngoc Huyen/Mai Phuong/Manh Dung...) tu Google Drive on-demand
+    "audiostretchy>=1.3.5", # _stretch_raw_py: time-stretch THUAN PYTHON (giu cao do, trong RAM) ep cau dub vua khe
+    "vietnormalizer",       # chuan hoa text TTS: so/ngay/tien/%/don-vi + PHIEN AM Anh->Viet (iPhone->ai-phon). MIT, stdlib-only. localize._chuan_hoa_tts uu tien, fallback tts_chuan_hoa.py
+    # --- Cào YouTube/TikTok/Twitter(X)/Reddit/Instagram (tai_ytdlp.py: from yt_dlp import YoutubeDL) ---
+    "yt-dlp>=2025.1.1",     # site đổi liên tục -> để floor, build mới sẽ lấy bản mới
+    # --- OCR đọc CHỮ phụ đề cứng = MẶC ĐỊNH tiếng Trung (ocr_text.py) + dò DẢI che (dai_sub_rapid.py) ---
+    # RapidOCR ONNX: "Đọc từ sub" đọc nguyên văn (chuẩn hơn ASR) + clustering tách dải che TIGHT
+    # (không đè mặt). Bản này CPU; DEPLOY GPU nên thêm onnxruntime-gpu để OCR nhanh ~5-10× (ocr_text tự dò
+    # CUDAExecutionProvider → det/rec_use_cuda). Không có → tự CPU; không cài được → lùi Whisper/Tesseract.
+    # rapidocr 3.x = PP-OCRv6 (chính xác hơn v4); rapidocr-onnxruntime 1.4.x = PP-OCRv4 fallback nếu v6 lỗi.
+    # THIẾU rapidocr 3.x thì ocr_text.py âm thầm lùi v4 (đã từng gặp: máy có model v6 nhưng thiếu code package).
+    "rapidocr>=3.0,<4",
+    "rapidocr-onnxruntime>=1.4.0",
+    # torch/torchaudio: F5-TTS/OmniVoice/Demucs cần. ÉP BẢN CPU qua [tool.uv.sources] (index pytorch-cpu)
+    # -> ~200MB thay vì ~2.5GB CUDA (torch + nvidia-*) trên Windows -> setup nhẹ, không kẹt mạng yếu.
+    # Whisper KHÔNG đụng torch (dùng ctranslate2 + nhóm 'gpu' riêng). F5-TTS/Demucs chạy CPU (chậm hơn;
+    # lồng tiếng mặc định = Supertonic ONNX torch-free nên không bị ảnh hưởng).
+    "torch",
+    "torchaudio",
+    "soundfile>=0.12.1",    # đọc/ghi WAV cho lồng tiếng (OmniVoice/F5) + Demucs tách nhạc
+    # --- Băm video dài -> clip ngắn theo CẢNH (cat_nho.py) ---
+    "scenedetect>=0.6.4",   # phat_hien_canh: ContentDetector (OpenCV) dò chuyển cảnh, CPU-only; opencv đã có sẵn
+]
+
+# --- GPU cho Whisper (TÙY CHỌN ~1.3GB: nvidia cuDNN 9 + cuBLAS 12) ---
+# KHÔNG cài mặc định: 2 wheel này ~690MB + ~553MB -> first-run nặng & dễ fail mạng.
+# Máy KHÔNG NVIDIA bỏ qua hoàn toàn (faster-whisper tự chạy CPU; v0.1.8 đã có GPU->CPU fallback).
+# Bật GPU khi cần trên máy NVIDIA: `uv sync --extra gpu` (setup.js/CAI-DAT tự chạy khi dò thấy nvidia-smi).
+[project.optional-dependencies]
+gpu = [
+    "nvidia-cuda-runtime-cu12>=12,<13",   # cudart64_12.dll — cublas PHỤ THUỘC; thiếu -> cublas 'cannot be loaded' -> lùi CPU
+    "nvidia-cublas-cu12",
+    "nvidia-cudnn-cu12>=9,<10",
+]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+default = true
+
+# torch CPU-only: index riêng của PyTorch (chỉ wheel CPU, KHÔNG kéo nvidia-*). explicit=true -> chỉ áp
+# cho gói được trỏ tới ở [tool.uv.sources] bên dưới, không đụng gói khác.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }

@@ -1,0 +1,43 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+.venv_omnivoice/
+.venv_kokoro/
+
+# App temporary/cache/data files
+_login_check.json
+app_config.json
+trang_config.json
+xu_ly_config.json
+workflow_auto.json
+
+# Audio and voice clone directories
+long_tieng/
+giong_mau/
+
+# Crawler browser data, cache artifacts, local video outputs
+MediaCrawler/browser_data/
+MediaCrawler/.venv/
+MediaCrawler/output/
+MediaCrawler/downloads/
+_cache_artifact/
+downloads/
+output/
+
+# Media files
+*.mp4
+*.mp3
+*.wav
+*.aac
+*.srt
+
+# OS specific files
+.DS_Store
+Thumbs.db
