@@ -301,6 +301,22 @@
   body.light #caoProgPct{color:#4f46e5 !important}
   body.light .chip-add{background:#f8fafc;border-color:#cbd5e1;color:#475569}
   body.light .chip-add:hover{background:#f1f5f9;border-color:#94a3b8;color:#0f172a}
+  /* Tối ưu hóa độ tương phản cho thanh tiến trình 5 bước (Header Wizard) */
+  body.light .wiz .ws{color:#475569}
+  body.light .wiz .ws .wn{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
+  body.light .wiz .ws.done .wn{background:rgba(34,197,94,0.15);color:#15803d !important;font-weight:800}
+  body.light .wiz .ws.done{color:#1e293b}
+  body.light .wiz .ws.cur .wn{background:var(--grad);color:#000000 !important;font-weight:900;box-shadow:0 0 0 3px rgba(214,161,42,.25)}
+  body.light .wiz .ws.cur{color:#0f172a;font-weight:800}
+  body.light .wiz .wsep{background:#cbd5e1}
+  /* Tối ưu hóa độ tương phản cho stepper trong trang (pwiz) */
+  body.light .pwiz .pn{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
+  body.light .pwiz .pl{color:#475569}
+  body.light .pwiz .ps.done .pn{background:rgba(34,197,94,0.15);color:#15803d !important}
+  body.light .pwiz .ps.done .pl{color:#1e293b}
+  body.light .pwiz .ps.cur .pn{background:var(--grad);color:#000000 !important;font-weight:900;box-shadow:0 0 0 4px rgba(214,161,42,.25)}
+  body.light .pwiz .ps.cur .pl{color:#0f172a;font-weight:800}
+  body.light .pwiz .pline{background:#cbd5e1}
 
   /* Suggest cards */
   .kcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:9px;margin-top:12px;max-height:480px;overflow-y:auto}
