@@ -3310,14 +3310,34 @@ def chay(video, model_size="medium", che_chu=True, burn=True,
             if lam_tach_nhac:
                 # "Tách lời (giữ nhạc gốc)": demucs BỎ giọng gốc, GIỮ NHẠC NỀN nguyên rồi đè giọng Việt.
                 # ƯU TIÊN trên goc_vol — vì goc_vol chỉ GIẢM ĐỀU (vẫn còn tiếng Trung), không bỏ được giọng.
+                # NAY: áp dụng mức giảm gốc (slider %) lên nhạc nền nếu người dùng cấu hình goc_vol.
                 goc_wav = os.path.join(thu_muc, ten + "_goc.wav")
                 lay_audio(video, goc_wav, video_slow=_vs, time_warp=_tw)
                 inst = nhac_da_tach if (nhac_da_tach and os.path.isfile(nhac_da_tach)) else tach_nhac(goc_wav, log_fn=log_fn)
-                nen, giam = (inst, 0.0) if inst else (goc_wav, -12.0)
-                log_fn("🎵 Giữ NHẠC NỀN (tách lời demucs), bỏ giọng gốc, đè giọng Việt." if inst
-                       else "⚠ Tách lời thất bại → giảm tiếng gốc 12dB rồi đè giọng Việt.")
-                mix_wav = os.path.join(thu_muc, ten + "_mix.wav")
-                tron_audio(dub_wav, nen, mix_wav, nen_giam_db=giam)
+                if goc_vol is not None:
+                    import math
+                    try:
+                        gv = max(0.0, min(1.0, float(goc_vol)))
+                    except (TypeError, ValueError):
+                        gv = 0.2
+                    giam = 30.0 * math.log10(gv) if gv > 0.001 else -99.0
+                else:
+                    giam = 0.0 if inst else -12.0
+
+                nen = inst if (inst and giam > -90.0) else (goc_wav if giam > -90.0 else None)
+                if nen is None:
+                    log_fn("🔇 Âm lượng nhạc nền = 0 — chỉ giữ giọng lồng tiếng Việt.")
+                    mix_wav = dub_wav
+                else:
+                    if inst:
+                        if goc_vol is not None:
+                            log_fn("🎵 Giữ NHẠC NỀN (tách lời demucs) ở mức %d%% (giảm %.1f dB), đè giọng Việt." % (round(gv * 100), giam))
+                        else:
+                            log_fn("🎵 Giữ NHẠC NỀN (tách lời demucs) 100%%, bỏ giọng gốc, đè giọng Việt.")
+                    else:
+                        log_fn("⚠ Tách lời thất bại → giảm tiếng gốc %.1f dB rồi đè giọng Việt." % abs(giam))
+                    mix_wav = os.path.join(thu_muc, ten + "_mix.wav")
+                    tron_audio(dub_wav, nen, mix_wav, nen_giam_db=giam)
             elif goc_vol is not None:
                 try:
                     gv = max(0.0, min(1.0, float(goc_vol)))
