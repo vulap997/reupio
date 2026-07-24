@@ -3234,7 +3234,13 @@ def chay(video, model_size="medium", che_chu=True, burn=True,
                 lt = long_tieng_supertonic(segs_vi, dur, dub_wav, voice=voice, lang=tgt, log_fn=log_fn)
                 if not lt:
                     log_fn("ℹ Supertonic không dùng được → lồng tiếng bằng edge-tts (%s)." % tgt)
-                    voi = voice if str(voice or "").count("-") >= 2 else ngon_ngu.voice_mac_dinh(tgt)   # giọng edge locale (xx-YY-...) giữ; else mặc định theo đích
+                    voi = voice
+                    if str(voice or "").strip().upper().startswith(("M", "F")):
+                        info = ngon_ngu.LANGS.get(tgt)
+                        if info and "voices" in info and len(info["voices"]) >= 2:
+                            voi = info["voices"][1][0] if str(voice or "").strip().upper().startswith("M") else info["voices"][0][0]
+                    if not voi or str(voi).count("-") < 2:
+                        voi = ngon_ngu.voice_mac_dinh(tgt)
                     lt = long_tieng_edge(segs_vi, dur, dub_wav, voi, log_fn=log_fn)
             elif tgt != "vi" and tts_engine == "piper":
                 # Piper TIẾNG ANH (narrator HF: en_US-lessac-high/ryan-high/amy-medium) — OFFLINE, CPU nhanh, VÔ
@@ -3249,7 +3255,13 @@ def chay(video, model_size="medium", che_chu=True, burn=True,
                     lt = long_tieng_edge(segs_vi, dur, dub_wav, voi, log_fn=log_fn)
             else:
                 # edge-tts (NHANH, không cần model local) — MỌI ngôn ngữ. Giọng edge locale (xx-YY-...Neural) giữ nguyên; else mặc định theo đích.
-                voi = voice if str(voice or "").count("-") >= 2 else ngon_ngu.voice_mac_dinh(tgt)
+                voi = voice
+                if str(voice or "").strip().upper().startswith(("M", "F")):
+                    info = ngon_ngu.LANGS.get(tgt)
+                    if info and "voices" in info and len(info["voices"]) >= 2:
+                        voi = info["voices"][1][0] if str(voice or "").strip().upper().startswith("M") else info["voices"][0][0]
+                if not voi or str(voi).count("-") < 2:
+                    voi = ngon_ngu.voice_mac_dinh(tgt)
                 lt = long_tieng_edge(segs_vi, dur, dub_wav, voi, log_fn=log_fn)
             _tg("Lồng tiếng (TTS + ghép track khớp timing)")
             if lt and os.path.isfile(dub_wav) and _dub_key:   # MISS → lưu track giọng thuần + META căn thời-lượng
