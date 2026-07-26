@@ -1331,8 +1331,8 @@
                     <span class="xl-mlbl">Tùy chọn</span>
                     <label class="xl-chk2" title="Tách nhạc gốc bằng AI, đặt giọng dịch lên trên — giữ nhạc nền"><input type="checkbox" id="xlTachNhac"> Tách lời (giữ nhạc)</label>
                     <label class="xl-chk2"><input type="checkbox" id="xlPhude" onchange="xlUpd()"> Tạo phụ đề</label>
-                    <label class="xl-chk2" title="Che dải chữ Trung gốc (tự dò OCR khi render)"><input type="checkbox" id="xlChe" checked> Che chữ Trung</label>
-                    <label class="xl-chk2" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú hiện 3s-5s)"><input type="checkbox" id="xlCheKhac"> Che chữ Trung khác</label>
+                    <label class="xl-chk2" title="Che dải chữ Trung gốc (tự dò OCR khi render)"><input type="checkbox" id="xlChe" checked> Che chữ Trung (Phụ đề chính)</label>
+                    <label class="xl-chk2" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú hiện 3s-5s)"><input type="checkbox" id="xlCheKhac"> Che chữ Trung khác (Chú thích/Tiêu đề tạm thời)</label>
                   </div>
                   <div class="xl-mini">
                     <span class="xl-mlbl">✍️ Viết lại phong cách <span class="help" data-tip="CHỈ dùng cho video ĐÃ REVIEW sẵn (đã có lời kể/thuyết minh) mà bạn muốn ĐỔI CÁCH DIỄN ĐẠT.&#10;Giữ nguyên ý + tình tiết + timeline, chỉ viết lại giọng kể cho khác đi.&#10;⚠️ KHÔNG dùng cho video GỐC chưa review.">?</span></span>
@@ -1468,7 +1468,8 @@
           <div class="section-label" style="margin-top:14px">Dịch &amp; lồng tiếng (chậm trên CPU)</div>
           <div style="display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center">
             <label class="toggle"><input type="checkbox" id="arPhude" onchange="arUpd()"> Phụ đề Việt</label>
-            <label class="toggle"><input type="checkbox" id="arChe" checked> Che chữ Trung</label>
+            <label class="toggle"><input type="checkbox" id="arChe" checked> Che chữ Trung (Phụ đề chính)</label>
+            <label class="toggle" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú)"><input type="checkbox" id="arCheKhac"> Che chữ Trung khác (Chú thích/Tiêu đề tạm thời)</label>
             <label class="toggle"><input type="checkbox" id="arDub" onchange="arUpd()"> Lồng tiếng</label>
             <label class="toggle" title="Chỉ khi Lồng tiếng. 0% = tắt hẳn tiếng gốc (chỉ giọng Việt); cao hơn = giữ tiếng gốc to hơn dưới giọng Việt">🔉 Âm gốc
               <input type="range" id="arGocVol" min="0" max="100" value="20" style="width:90px;vertical-align:middle;accent-color:var(--accent)"
@@ -4173,6 +4174,7 @@ function arOpts(){
     color:document.getElementById("arColor").checked,
     phude:document.getElementById("arPhude").checked,
     che_chu:document.getElementById("arChe").checked,
+    che_khac:document.getElementById("arCheKhac").checked,
     long_tieng:document.getElementById("arDub").checked,
     model:document.getElementById("arModel").value,
     ref_audio:(document.getElementById("arVoice")||{}).value||"",
