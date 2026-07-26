@@ -3513,6 +3513,7 @@ def main():
     ap.add_argument("video")
     ap.add_argument("--model", default="small")
     ap.add_argument("--no-che", action="store_true", help="Không che chữ Trung")
+    ap.add_argument("--che-khac", action="store_true", help="Che chữ Trung khác")
     ap.add_argument("--no-burn", action="store_true", help="Chỉ xuất .srt, không ghép video")
     ap.add_argument("--long-tieng", action="store_true", help="Lồng tiếng Việt (edge-tts)")
     ap.add_argument("--tach-nhac", action="store_true", help="Tách nhạc nền (demucs, nặng)")
@@ -3539,7 +3540,7 @@ def main():
                     help="Lọc âm cuối, danh sách cách nhau dấu phẩy: normalize,denoise,wind")
     a = ap.parse_args()
     try:
-        chay(a.video, model_size=a.model, che_chu=not a.no_che, burn=not a.no_burn,
+        chay(a.video, model_size=a.model, che_chu=not a.no_che, che_khac=a.che_khac, burn=not a.no_burn,
              lam_long_tieng=a.long_tieng, lam_tach_nhac=a.tach_nhac, voice=a.voice,
              engine=a.engine, srt_co_san=a.srt_co_san, tach_truoc=a.tach_truoc,
              ref_audio=a.ref_audio, tts_engine=a.tts, goc_vol=a.goc_vol, chi_asr=a.chi_asr,

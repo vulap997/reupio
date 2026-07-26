@@ -377,9 +377,14 @@ def phat_hien_chu_khac(video, main_sub_band=None, log_fn=print, sample_fps=2.0):
                 })
                 
         out_segs = []
+        video_dur = nfr / fps
+        max_dur = min(20.0, video_dur * 0.85)
+        if max_dur < 5.0:
+            max_dur = video_dur
+            
         for seg in segs:
             dur = seg['t_end'] - seg['t_start']
-            if 0.8 <= dur <= 10.0:
+            if 0.8 <= dur <= max_dur:
                 ny0 = max(0.0, seg['y0'] - 0.005)
                 ny1 = min(1.0, seg['y1'] + 0.008)
                 nx0 = max(0.0, seg['x0'] - 0.01)
