@@ -520,7 +520,17 @@ def ocr_dong(video, log=print, on_seg=None):
                 pb = boxes[-1]
                 # HỘP = BAO TRÙM cả vòng đời dòng (min/max) → phụ đề hiện-dần rộng dần thì che (blur động CHE_DONG=1)
                 # phủ ĐỦ bề rộng chữ, không hụt. Vị-trí xác định 1 lần/dòng dùng cho cả timing lẫn che.
-                boxes[-1] = (pb[0], t, min(pb[2], ry0), max(pb[3], ry1), min(pb[4], rx0), max(pb[5], rx1))
+                ny0 = min(pb[2], ry0)
+                ny1 = max(pb[3], ry1)
+                # Khống chế chiều cao tránh phình to do bọt nước/nhiễu nền khi gộp cue
+                max_h = 0.15
+                if (ny1 - ny0) > max_h:
+                    nyc = (ny0 + ny1) / 2.0
+                    if nyc >= 0.5:
+                        ny0 = ny1 - max_h
+                    else:
+                        ny1 = ny0 + max_h
+                boxes[-1] = (pb[0], t, ny0, ny1, min(pb[4], rx0), max(pb[5], rx1))
             else:
                 pr["new"] += 1
                 # t_on = t_new (lúc chữ vừa HIỆN) thay vì t (sau trễ hysteresis ~0.5s) → phụ đề Việt hiện SỚM đúng

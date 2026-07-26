@@ -176,9 +176,19 @@ def phat_hien_dai_ocr(video, srt_path=None, log_fn=print, n_frames=8):
     pad = int(round(0.03 * H))
     y0 = max(0, y0 - pad)
     y1 = min(H - 1, y1 + pad)
+    y0_frac = y0 / float(H)
+    y1_frac = y1 / float(H)
+    # Khống chế dải che tránh phình to do nhiễu
+    max_h = 0.15
+    if (y1_frac - y0_frac) > max_h:
+        yc = (y0_frac + y1_frac) / 2.0
+        if yc >= 0.5:
+            y0_frac = y1_frac - max_h
+        else:
+            y1_frac = y0_frac + max_h
     log_fn("🔎 OCR dò dải sub gốc: %.1f%%–%.1f%% chiều cao (%d/%d khung có chữ)."
-           % (100.0 * y0 / H, 100.0 * y1 / H, n_hit, len(moc)))
-    return (y0 / float(H), y1 / float(H), H)
+           % (100.0 * y0_frac * 100, 100.0 * y1_frac * 100, n_hit, len(moc)))
+    return (y0_frac, y1_frac, H)
 
 
 if __name__ == "__main__":

@@ -119,6 +119,14 @@ def phat_hien_hop_dong(video, log_fn=print, fps_sample=4.0, n_max=4000):
             y1 = float(np.percentile([b[1] for b in boxes], 90))
             x0 = float(np.percentile([b[2] for b in boxes], 10))
             x1 = float(np.percentile([b[3] for b in boxes], 90))
+            # Khống chế chiều cao hộp động tránh phình to do bọt nước/nhiễu nền
+            max_h = 0.15
+            if (y1 - y0) > max_h:
+                yc = (y0 + y1) / 2.0
+                if yc >= 0.5:
+                    y0 = y1 - max_h
+                else:
+                    y1 = y0 + max_h
             out.append((max(0.0, t_on - half), t_last + half, y0, y1, x0, x1))
         if not out:
             return None
@@ -230,6 +238,14 @@ def phat_hien_dai_rapid(video, log_fn=print, n_frames=8):
         y1 = float(np.percentile([z[2] for z in best], 90))
         if y1 <= y0 or (y1 - y0) < 0.01:
             return None
+        # Khống chế dải che mờ bị phình to do nhiễu nền (bọt nước, rót nước, vạch chia nước, tay chuyển động)
+        max_h = 0.15  # Chiều cao tối đa hợp lý cho dải sub (15% khung hình)
+        if (y1 - y0) > max_h:
+            yc = (y0 + y1) / 2.0
+            if yc >= 0.5:
+                y0 = y1 - max_h  # Sub ở nửa dưới: giữ đáy, cắt bớt phần trên (nơi có bọt nước/nhiễu)
+            else:
+                y1 = y0 + max_h  # Sub ở nửa trên: giữ đỉnh, cắt bớt phần dưới
         # BỀ NGANG text: union x của MỌI box nằm trong dải y (cả 2 dòng sub, không chỉ cluster tốt nhất) →
         # blur ĐÚNG HỘP text (không full-width đè 2 mép). box: z[4]=xc, z[3]=w (đều phần trăm bề rộng khung).
         inb = [z for z in boxes if (y0 - 0.02) <= z[0] <= (y1 + 0.02)]
