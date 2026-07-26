@@ -1349,7 +1349,8 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             _noi_env = float(os.environ.get("CHE_NOI", "") or 0)
         except ValueError:
             _noi_env = 0.0
-        noi = max(_noi_env, 0.05, (by1 - by0) * 0.6)
+        # Giảm 50% độ nới rộng và chiều cao dải che để ôm khít chữ, tránh đẩy sub Việt lên quá cao
+        noi = max(_noi_env, 0.025, (by1 - by0) * 0.3)
         if (by0 + by1) / 2.0 >= 0.5:          # dải ở NỬA DƯỚI
             if by1 >= 0.85:
                 # Sub SÁT đáy khung (video full-frame): detection cũ imprecise, sub có thể 2 dòng tràn →
@@ -1358,20 +1359,20 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                 by1 = min(1.0, max(by1, 0.995))
             else:
                 # Sub Ở GIỮA (clip 9:16 nội dung+sub giữa ~55-64%): RapidOCR dò TIGHT → hộp hay HỤT mép chữ Trung
-                # (chữ cao/tràn ngoài) → khi sub Việt hở nét là LỘ chữ Trung. NỚI nhỏ mặc định (~2% khung mỗi phía)
-                # cho phủ hết mép; CAP CHE_CAP (0.15) bên dưới vẫn chặn phình quá (đè mặt/người). Tăng: env CHE_NOI.
-                m = max(_noi_env, 0.02)
+                # (chữ cao/tràn ngoài) → khi sub Việt hở nét là LỘ chữ Trung. NỚI nhỏ mặc định (~1% khung mỗi phía)
+                # cho phủ hết mép; CAP CHE_CAP (0.075) bên dưới vẫn chặn phình quá (đè mặt/người). Tăng: env CHE_NOI.
+                m = max(_noi_env, 0.01)
                 by0 = max(0.0, by0 - m)
                 by1 = min(1.0, by1 + m)
         else:                                  # dải ĐỈNH → NỚI XUỐNG DƯỚI cho phủ hết, kéo lên sát đỉnh
             by0 = max(0.0, min(by0, 0.005))
             by1 = min(1.0, by1 + noi)
-        # CAP: dải blur KHÔNG vượt CHE_CAP (mặc định 0.30) chiều cao khung. Dò/nới sai cũng KHÔNG đè quá nhiều.
-        # Neo về phía có chữ (đáy giữ đáy, đỉnh giữ đỉnh) rồi cắt phần thừa. Che-đáy cần ~0.30 cho đủ dải.
+        # CAP: dải blur KHÔNG vượt CHE_CAP (mặc định 0.15) chiều cao khung. Dò/nới sai cũng KHÔNG đè quá nhiều.
+        # Neo về phía có chữ (đáy giữ đáy, đỉnh giữ đỉnh) rồi cắt phần thừa. Che-đáy cần ~0.15 cho đủ dải.
         try:
-            _cap = float(os.environ.get("CHE_CAP", "") or 0.15)
+            _cap = float(os.environ.get("CHE_CAP", "") or 0.075)
         except ValueError:
-            _cap = 0.15
+            _cap = 0.075
         if by1 - by0 > _cap:
             if (by0 + by1) / 2.0 >= 0.5:
                 by0 = by1 - _cap           # dải đáy → giữ ĐÁY, cắt phần trên
