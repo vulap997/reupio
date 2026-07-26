@@ -523,7 +523,7 @@ def ocr_dong(video, log=print, on_seg=None):
                 ny0 = min(pb[2], ry0)
                 ny1 = max(pb[3], ry1)
                 # Khống chế chiều cao tránh phình to do bọt nước/nhiễu nền khi gộp cue
-                max_h = 0.15
+                max_h = 0.12
                 if (ny1 - ny0) > max_h:
                     nyc = (ny0 + ny1) / 2.0
                     if nyc >= 0.5:

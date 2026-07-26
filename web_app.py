@@ -3826,6 +3826,8 @@ def _lenh_xu_ly(full, o, pha=None):
         lenh.append("--phude")
     if not o.get("che_chu", True):
         lenh.append("--no-che")
+    if o.get("che_khac"):
+        lenh.append("--che-khac")
     if o.get("long_tieng"):
         lenh.append("--long-tieng")
     if o.get("loi_thoai"):
@@ -7689,6 +7691,8 @@ class Handler(BaseHTTPRequestHandler):
             lenh = [PYTHON_VENV, "localize.py", full, "--model", str(body.get("model", "medium"))]
             if not body.get("che_chu", True):
                 lenh.append("--no-che")
+            if body.get("che_khac"):
+                lenh.append("--che-khac")
             if body.get("long_tieng"):
                 lenh.append("--long-tieng")
             if body.get("tach_nhac"):

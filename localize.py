@@ -2658,7 +2658,7 @@ class _ResMon:
         return {"cpu": _a(1), "ram": _a(2), "gpu": _a(3), "vram": round(max(vr)) if vr else None}
 
 
-def chay(video, model_size="medium", che_chu=True, burn=True,
+def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
          lam_long_tieng=False, lam_tach_nhac=False, voice="vi-VN-HoaiMyNeural",
          engine="google", srt_co_san=None, tach_truoc=False, ref_audio=None,
          src_lang=None, tts_engine="edge", log_fn=log,
@@ -3165,6 +3165,19 @@ def chay(video, model_size="medium", che_chu=True, burn=True,
                                     pass
                     except Exception:
                         blur_segs = None
+
+        if che_khac:
+            try:
+                import dai_sub_rapid
+                log_fn("🔎 Đang dò tìm các chữ Trung khác xuất hiện tạm thời trong video...")
+                other_segs = dai_sub_rapid.phat_hien_chu_khac(video, blur_band, log_fn=log_fn)
+                if other_segs:
+                    if blur_segs is None:
+                        blur_segs = []
+                    blur_segs.extend(other_segs)
+                    co_blur = True
+            except Exception as _e:
+                log_fn("⚠ Lỗi khi dò chữ Trung khác: " + str(_e))
 
     if lam_long_tieng:
         dur = _thoi_luong(video) or (segs_vi[-1][1] + 2)

@@ -120,7 +120,7 @@ def phat_hien_hop_dong(video, log_fn=print, fps_sample=4.0, n_max=4000):
             x0 = float(np.percentile([b[2] for b in boxes], 10))
             x1 = float(np.percentile([b[3] for b in boxes], 90))
             # Khống chế chiều cao hộp động tránh phình to do bọt nước/nhiễu nền
-            max_h = 0.15
+            max_h = 0.12
             if (y1 - y0) > max_h:
                 yc = (y0 + y1) / 2.0
                 if yc >= 0.5:
@@ -239,7 +239,7 @@ def phat_hien_dai_rapid(video, log_fn=print, n_frames=8):
         if y1 <= y0 or (y1 - y0) < 0.01:
             return None
         # Khống chế dải che mờ bị phình to do nhiễu nền (bọt nước, rót nước, vạch chia nước, tay chuyển động)
-        max_h = 0.15  # Chiều cao tối đa hợp lý cho dải sub (15% khung hình)
+        max_h = 0.12  # Chiều cao tối đa hợp lý cho dải sub (12% khung hình)
         if (y1 - y0) > max_h:
             yc = (y0 + y1) / 2.0
             if yc >= 0.5:
@@ -259,3 +259,138 @@ def phat_hien_dai_rapid(video, log_fn=print, n_frames=8):
         return (max(0.0, y0 - 0.006), min(1.0, y1 + 0.008), H, x0, x1)   # TIGHT: chỉ phủ nét chữ, không phình
     except Exception:
         return None
+
+
+def phat_hien_chu_khac(video, main_sub_band=None, log_fn=print, sample_fps=2.0):
+    """
+    Dò các cụm chữ Trung khác (tiêu đề, chú thích...) xuất hiện tạm thời trong video (0.8s -> 10s)
+    và không trùng với dải phụ đề chính (main_sub_band).
+    """
+    try:
+        import cv2
+        import numpy as np
+        import ocr_text
+        if not ocr_text.co_rapidocr():
+            return []
+        eng = ocr_text._engine()
+        
+        cap = cv2.VideoCapture(os.path.abspath(video))
+        if not cap.isOpened():
+            return []
+            
+        fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        nfr = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        if H <= 0 or W <= 0 or nfr <= 0:
+            cap.release()
+            return []
+            
+        stride = max(1, int(round(fps / sample_fps)))
+        
+        # main_sub_band format: (y0, y1, H, x0, x1)
+        sub_y0 = main_sub_band[0] if main_sub_band else 0.80
+        sub_y1 = main_sub_band[1] if main_sub_band else 0.99
+        
+        all_boxes = []
+        fidx = 0
+        while fidx < nfr:
+            if fidx % stride == 0:
+                ok, fr = cap.read()
+                if not ok or fr is None:
+                    break
+                t = fidx / fps
+                
+                sc = 960.0 / W if W > 960 else 1.0
+                if sc != 1.0:
+                    fr_ocr = cv2.resize(fr, (960, int(H * sc)))
+                else:
+                    fr_ocr = fr
+                
+                try:
+                    out, _ = eng(fr_ocr)
+                except Exception:
+                    fidx += 1
+                    continue
+                    
+                if out:
+                    for box, txt, score in out:
+                        if not txt or score < 0.40:
+                            continue
+                        
+                        # Chỉ lấy chữ Trung CJK
+                        if not any("一" <= c <= "鿿" for c in txt):
+                            continue
+                            
+                        xs = [p[0] for p in box]
+                        ys = [p[1] for p in box]
+                        
+                        ch, cw = fr_ocr.shape[:2]
+                        y0_frac = min(ys) / ch
+                        y1_frac = max(ys) / ch
+                        x0_frac = min(xs) / cw
+                        x1_frac = max(xs) / cw
+                        
+                        yc = (y0_frac + y1_frac) / 2.0
+                        if sub_y0 - 0.03 <= yc <= sub_y1 + 0.03:
+                            continue
+                            
+                        all_boxes.append((t, y0_frac, y1_frac, x0_frac, x1_frac, txt))
+            else:
+                if not cap.grab():
+                    break
+            fidx += 1
+            
+        cap.release()
+        
+        if not all_boxes:
+            return []
+            
+        segs = []
+        for box in all_boxes:
+            t, y0, y1, x0, x1, txt = box
+            found = False
+            for seg in segs:
+                if t - seg['t_end'] <= 1.5:
+                    seg_yc = (seg['y0'] + seg['y1']) / 2.0
+                    seg_xc = (seg['x0'] + seg['x1']) / 2.0
+                    yc = (y0 + y1) / 2.0
+                    xc = (x0 + x1) / 2.0
+                    if abs(yc - seg_yc) <= 0.04 and abs(xc - seg_xc) <= 0.05:
+                        seg['t_end'] = t
+                        seg['y0'] = min(seg['y0'], y0)
+                        seg['y1'] = max(seg['y1'], y1)
+                        seg['x0'] = min(seg['x0'], x0)
+                        seg['x1'] = max(seg['x1'], x1)
+                        seg['texts'].append(txt)
+                        found = True
+                        break
+            if not found:
+                segs.append({
+                    't_start': t,
+                    't_end': t,
+                    'y0': y0,
+                    'y1': y1,
+                    'x0': x0,
+                    'x1': x1,
+                    'texts': [txt]
+                })
+                
+        out_segs = []
+        for seg in segs:
+            dur = seg['t_end'] - seg['t_start']
+            if 0.8 <= dur <= 10.0:
+                ny0 = max(0.0, seg['y0'] - 0.005)
+                ny1 = min(1.0, seg['y1'] + 0.008)
+                nx0 = max(0.0, seg['x0'] - 0.01)
+                nx1 = min(1.0, seg['x1'] + 0.01)
+                
+                t_on = max(0.0, seg['t_start'] - 0.2)
+                t_off = seg['t_end'] + 0.2
+                out_segs.append((t_on, t_off, ny0, ny1, nx0, nx1))
+                
+        log_fn("🎯 [CHE CHỮ KHÁC] Tìm thấy %d vùng chữ Trung khác xuất hiện tạm thời." % len(out_segs))
+        return out_segs
+    except Exception as e:
+        log_fn("⚠ Lỗi khi dò chữ Trung khác: " + str(e))
+        return []

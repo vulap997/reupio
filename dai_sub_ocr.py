@@ -179,7 +179,7 @@ def phat_hien_dai_ocr(video, srt_path=None, log_fn=print, n_frames=8):
     y0_frac = y0 / float(H)
     y1_frac = y1 / float(H)
     # Khống chế dải che tránh phình to do nhiễu
-    max_h = 0.15
+    max_h = 0.12
     if (y1_frac - y0_frac) > max_h:
         yc = (y0_frac + y1_frac) / 2.0
         if yc >= 0.5:

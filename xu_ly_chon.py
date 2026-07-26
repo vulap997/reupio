@@ -47,6 +47,7 @@ def main():
     # Dịch & lồng tiếng
     ap.add_argument("--phude", action="store_true")
     ap.add_argument("--no-che", action="store_true")
+    ap.add_argument("--che-khac", action="store_true")
     ap.add_argument("--long-tieng", action="store_true")
     ap.add_argument("--tach-nhac", action="store_true")
     ap.add_argument("--khong-tieng-goc", action="store_true", help="Bỏ HẲN tiếng gốc, chỉ giữ giọng lồng tiếng Việt")
@@ -274,7 +275,7 @@ def main():
         # ---- Phụ đề / lồng tiếng (whisper nghe ở TỐC ĐỘ GỐC; tốc độ gộp vào burn) ----
         burn_sub = a.phude or (bool(a.srt_co_san) and not a.long_tieng)
         try:
-            ket = localize.chay(work, model_size=a.model, che_chu=not a.no_che, burn=burn_sub,
+            ket = localize.chay(work, model_size=a.model, che_chu=not a.no_che, che_khac=a.che_khac, burn=burn_sub,
                                 lam_long_tieng=a.long_tieng, lam_tach_nhac=a.tach_nhac,
                                 voice=a.voice, engine=a.engine, srt_co_san=a.srt_co_san,
                                 tach_truoc=a.tach_truoc, ref_audio=a.ref_audio,

@@ -1332,6 +1332,7 @@
                     <label class="xl-chk2" title="Tách nhạc gốc bằng AI, đặt giọng dịch lên trên — giữ nhạc nền"><input type="checkbox" id="xlTachNhac"> Tách lời (giữ nhạc)</label>
                     <label class="xl-chk2"><input type="checkbox" id="xlPhude" onchange="xlUpd()"> Tạo phụ đề</label>
                     <label class="xl-chk2" title="Che dải chữ Trung gốc (tự dò OCR khi render)"><input type="checkbox" id="xlChe" checked> Che chữ Trung</label>
+                    <label class="xl-chk2" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú hiện 3s-5s)"><input type="checkbox" id="xlCheKhac"> Che chữ Trung khác</label>
                   </div>
                   <div class="xl-mini">
                     <span class="xl-mlbl">✍️ Viết lại phong cách <span class="help" data-tip="CHỈ dùng cho video ĐÃ REVIEW sẵn (đã có lời kể/thuyết minh) mà bạn muốn ĐỔI CÁCH DIỄN ĐẠT.&#10;Giữ nguyên ý + tình tiết + timeline, chỉ viết lại giọng kể cho khác đi.&#10;⚠️ KHÔNG dùng cho video GỐC chưa review.">?</span></span>
@@ -3885,6 +3886,7 @@ function _xlBuildOpts(){   // dựng opts render từ panel (dùng cho xlRun (k�
     trim_end:parseFloat(document.getElementById("xlTrimE").value)||0,
     phude:document.getElementById("xlPhude").checked,
     che_chu:document.getElementById("xlChe").checked,
+    che_khac:document.getElementById("xlCheKhac").checked,
     long_tieng:document.getElementById("xlDub").checked,
     loi_thoai:(document.getElementById("xlLoiThoai")||{}).value||"ocr",   // ocr=Đọc từ sub | whisper=Giọng nói
     model:document.getElementById("xlModel").value,
@@ -5342,7 +5344,7 @@ function xlApplyOpts(o){   // đổ 1 bộ render_opts đã lưu vào panel #xlC
   chk("xlMirror",o.mirror); chk("xlColor",o.color!==false);
   const speedOn=(o.speed||1)!==1; chk("xlSpeedOn",speedOn); if(speedOn) set("xlSpeed",o.speed||0.8);
   set("xlTrimS",o.trim_start||0); set("xlTrimE",o.trim_end||0);
-  chk("xlPhude",o.phude!==false); chk("xlChe",o.che_chu!==false); chk("xlDub",o.long_tieng!==false);
+  chk("xlPhude",o.phude!==false); chk("xlChe",o.che_chu!==false); chk("xlCheKhac",!!o.che_khac); chk("xlDub",o.long_tieng!==false);
   set("xlLoiThoai",o.loi_thoai||"ocr"); set("xlEngine",o.engine==="google"?"gemini":(o.engine!=null?o.engine:"gemini"));   // google đã bỏ → map về AI
   set("xlTts",o.tts||"piper"); set("xlRatio",o.ratio||""); set("xlChuDe",o.chu_de||"");
   set("xlGocVol",Math.round((o.goc_vol||0)*100)); chk("xlTachNhac",o.tach_nhac); set("xlMaxSp",o.max_speed||"");
@@ -6221,6 +6223,7 @@ async function xlPreview5s(){
   if(!ds.length){alert("Chọn 1 video trước (bấm vào ảnh).");return;}
   const opts={
     che_chu:document.getElementById("xlChe").checked,
+    che_khac:document.getElementById("xlCheKhac").checked,
     mirror:document.getElementById("xlMirror").checked,
     ratio:(document.getElementById("xlRatio")||{}).value||"",
     logo:(rdLogo&&rdLogo.path)? rdLogo : (((document.getElementById("xlLogo")||{}).checked && xlLogoPath)? {path:xlLogoPath, goc:"tr"} : null),
@@ -7379,7 +7382,7 @@ function wfRenderOpts(){   // đọc THẲNG panel cấu hình tab Render (đã 
     speed: speedOn?(parseFloat(g("xlSpeed").value)||0.8):1.0,
     zoom:(g("xlZoomOn")||{}).checked?(parseFloat((g("xlZoom")||{}).value)||1.0):1.0, watermark:false,
     trim_start:parseFloat(g("xlTrimS").value)||0, trim_end:parseFloat(g("xlTrimE").value)||0,
-    phude:!!g("xlPhude").checked, che_chu:!!g("xlChe").checked, long_tieng:!!g("xlDub").checked,
+    phude:!!g("xlPhude").checked, che_chu:!!g("xlChe").checked, che_khac:!!g("xlCheKhac").checked, long_tieng:!!g("xlDub").checked,
     loi_thoai:g("xlLoiThoai").value||"ocr", model:g("xlModel").value||"medium",
     ref_audio:g("xlGiong").value||"", engine:g("xlEngine").value||"",
     tts:d.tts||"edge",
