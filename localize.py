@@ -900,7 +900,7 @@ def _chia_nhip(cues, max_ky_tu=58, min_doc=0.45, max_doc=5.0):
     return res
 
 
-def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phude_style="default"):
+def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phude_style="default", no_box=False):
     """Sinh ASS đặt phụ đề Việt ĐÚNG vị trí (\\pos + \\an5) → ĐÈ LÊN dải blur, KHÔNG hard-code MarginV (đo thật
     force_style MarginV libass áp KHÔNG đáng tin: 72≡144), 2 DÒNG tự căn giữa quanh tâm (không vỡ). `segs` =
     list (t_on,t_off,y0,y1,x0,x1): mỗi cue → ĐOẠN chứa mốc-giữa-cue (sub DI CHUYỂN thì cue bám đúng đoạn) →
@@ -927,25 +927,25 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         p_col = "&H00000000"
         o_col = "&H00FFFFFF"
         b_col = "&H00FFFFFF"
-        b_style = 3
+        b_style = 1 if no_box else 3
         sh_val = 0
     elif phude_style == "black_on_yellow":
         p_col = "&H00000000"
         o_col = "&H0000FFFF"
         b_col = "&H0000FFFF"
-        b_style = 3
+        b_style = 1 if no_box else 3
         sh_val = 0
     elif phude_style == "white_on_yellow_black":
         p_col = "&H00FFFFFF"
         o_col = "&H00000000"
         b_col = "&H0000FFFF"
-        b_style = 3
+        b_style = 1 if no_box else 3
         sh_val = 0
     elif phude_style == "white_on_black":
         p_col = "&H00FFFFFF"
         o_col = "&H00000000"
         b_col = "&H00000000"
-        b_style = 3
+        b_style = 1 if no_box else 3
         sh_val = 0
 
     # ===== AUTO-FIT cỡ chữ theo BỀ NGANG (fix phụ đề VIDEO DỌC tràn dải) =====
@@ -1247,14 +1247,15 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     # Style sub: nếu biết dải → đặt MarginV để chữ Việt nằm ĐÚNG dải đã làm mờ (đè lên chữ gốc).
     style_sub = _STYLE_SUB
     if phude_style != "default":
+        _b_style = 1 if co_blur else 3
         if phude_style == "black_on_white":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "black_on_yellow":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "white_on_yellow_black":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "white_on_black":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
     if co_blur:
         _y0, _y1, _H = blur_band[:3]          # blur_band có thể là 5-tuple (y0,y1,H,x0,x1) — chỉ cần y cho MarginV
         if (_y0 + _y1) / 2.0 < 0.5:
@@ -1293,7 +1294,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                     _bx1 = blur_band[4] if len(blur_band) > 4 else 1.0
                     _segs = [(0.0, 1e9, blur_band[0], blur_band[1], _bx0, _bx1)]
                 _acand = "_burnpos_%d.ass" % os.getpid()
-                if _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style) > 0:
+                if _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur) > 0:
                     sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
         except Exception as _e:
             log_fn("⚠ Đặt phụ đề theo dải lỗi (%s) → phụ đề thường." % str(_e)[:50])
