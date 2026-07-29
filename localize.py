@@ -1452,13 +1452,31 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         except ValueError:
             _alpha = 0.85
         _mix = "" if _alpha >= 0.999 else f",format=yuva420p,colorchannelmixer=aa={_alpha:.3f}"
-        fc.append(f"[{cur}]split[cmain][cband]")
-        # gblur (gaussian) sigma lớn, KHÔNG vướng giới hạn radius≤kích-thước như boxblur (an toàn mọi hộp).
-        fc.append(f"[cband]crop=iw*{bw:.4f}:ih*{bh:.4f}:iw*{bx0:.4f}:ih*{by0:.4f},gblur=sigma=18:steps=3{_mix}[cbandb]")
-        fc.append(f"[cmain][cbandb]overlay=W*{bx0:.4f}:H*{by0:.4f}[vmsk]")
+        if phude_style == "default":
+            fc.append(f"[{cur}]split[cmain][cband]")
+            # gblur (gaussian) sigma lớn, KHÔNG vướng giới hạn radius≤kích-thước như boxblur (an toàn mọi hộp).
+            fc.append(f"[cband]crop=iw*{bw:.4f}:ih*{bh:.4f}:iw*{bx0:.4f}:ih*{by0:.4f},gblur=sigma=18:steps=3{_mix}[cbandb]")
+            fc.append(f"[cmain][cbandb]overlay=W*{bx0:.4f}:H*{by0:.4f}[vmsk]")
+        else:
+            _color_map = {
+                "black_on_white": "white",
+                "black_on_yellow": "yellow",
+                "white_on_yellow_black": "yellow",
+                "white_on_black": "black"
+            }
+            _c_name = _color_map.get(phude_style, "black")
+            _c_val = f"{_c_name}@{_alpha:.3f}" if _alpha < 0.999 else _c_name
+            fc.append(f"[{cur}]drawbox=x=iw*{bx0:.4f}:y=ih*{by0:.4f}:w=iw*{bw:.4f}:h=ih*{bh:.4f}:color={_c_val}:t=fill[vmsk]")
         cur = "vmsk"
     elif che_chu:
-        post.append("drawbox=x=0:y=ih*0.80:w=iw:h=ih*0.20:color=black@1.0:t=fill")
+        _color_map = {
+            "black_on_white": "white@1.0",
+            "black_on_yellow": "yellow@1.0",
+            "white_on_yellow_black": "yellow@1.0",
+            "white_on_black": "black@1.0"
+        }
+        _box_color = _color_map.get(phude_style, "black@1.0")
+        post.append(f"drawbox=x=0:y=ih*0.80:w=iw:h=ih*0.20:color={_box_color}:t=fill")
     if vi_srt:
         if sub_ass_rel:                       # ASS \pos: phụ đề ĐÈ tâm dải blur (style nằm trong file ASS)
             post.append(f"subtitles={sub_ass_rel}")
