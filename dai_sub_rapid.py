@@ -233,7 +233,15 @@ def phat_hien_dai_rapid(video, log_fn=print, n_frames=8):
             if changing:
                 best = max(changing, key=lambda x: x[1])[0]    # position-agnostic → sub GIỮA không bị đáy lấn
         if best is None:                                       # fallback: logic cũ (bottom-biased) — zero-risk
-            best = max(cand, key=lambda c: c[1] * c[2] * (0.6 + c[3]))[0]
+            # Fallback: Loại bỏ các cụm chữ tĩnh (như sổ ghi chép, logo, watermark có doi < 1.8)
+            # để tránh nhận diện nhầm chữ tĩnh làm dải phụ đề chính.
+            valid_cand = []
+            for cl, nf, avg_w, yc in cand:
+                if _doi_anh(cl) >= 1.8:
+                    valid_cand.append((cl, nf, avg_w, yc))
+            if not valid_cand:
+                valid_cand = cand
+            best = max(valid_cand, key=lambda c: c[1] * c[2] * (0.6 + c[3]) * (_doi_anh(c[0]) + 0.1))[0]
         y0 = float(np.percentile([z[1] for z in best], 10))   # bỏ outlier mép trên/dưới của cluster
         y1 = float(np.percentile([z[2] for z in best], 90))
         if y1 <= y0 or (y1 - y0) < 0.01:
