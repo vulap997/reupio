@@ -1439,17 +1439,26 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             _cap_env = float(os.environ.get("CHE_CAP", "") or 0)
         except ValueError:
             _cap_env = 0
-        _cap = _cap_env if _cap_env > 0 else (h_sub + noi_top + noi_bot + 0.01)
+        _cap_default = 0.12 if _is_landscape else 0.08
+        _cap = _cap_env if _cap_env > 0 else _cap_default
+        
+        # Cắt bớt phần text dò được nếu chiều cao text gốc vượt quá cap (do nhiễu OCR...)
+        if _by1_txt - _by0_txt > _cap:
+            if (by0 + by1) / 2.0 >= 0.5:
+                _by0_txt = _by1_txt - _cap
+            else:
+                _by1_txt = _by0_txt + _cap
+                
+        # 🐛 FIX (đáy/mọi dải lộ mép chữ): kéo phủ hết chiều cao chữ dò được (đã được giới hạn trong cap)
+        by0 = min(by0, _by0_txt)
+        by1 = max(by1, _by1_txt)
+        
+        # Áp dụng giới hạn cứng của cap lên dải sau khi đã cộng thêm khoảng nới (padding)
         if by1 - by0 > _cap:
             if (by0 + by1) / 2.0 >= 0.5:
                 by0 = by1 - _cap           # dải đáy → giữ ĐÁY, cắt phần trên
             else:
                 by1 = by0 + _cap           # dải đỉnh → giữ ĐỈNH, cắt phần dưới
-        # 🐛 FIX (đáy/mọi dải lộ mép chữ): cap chỉ được cắt phần NỚI thừa — KHÔNG cắt vào CHỮ dò được. Nếu cap kéo
-        # mép dải vào trong vùng chữ (vd đáy: ép top xuống 0.845 mà đỉnh chữ ở 0.80) → đỉnh/đáy chữ Trung LỘ (đúng lỗi
-        # user báo). Kéo lại cho phủ HẾT chiều cao chữ dò được, dù vượt cap chút (che hết chữ > giữ tiết diện nhỏ).
-        by0 = min(by0, _by0_txt)
-        by1 = max(by1, _by1_txt)
         # CÁCH LỀ (đỡ xấu, giống các video khác): dải blur chừa lề CHE_LE mỗi bên (mặc định 5% khung) thay vì
         # bám sát 2 mép. Chỉ THU vào (max/min) — nếu hộp text đã hẹp hơn thì GIỮ, không nới ra ngoài lề.
         try:
