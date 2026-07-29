@@ -1053,8 +1053,8 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
             m = H * 0.03                                     # lề an toàn trên/dưới
             cyc = min(cy, H - m - block_h / 2.0)             # KẸP: khối không lòi khỏi ĐÁY
             cyc = max(cyc, m + block_h / 2.0)                #      cũng không lòi khỏi ĐỈNH
-            tag = ("{\\fs%d\\pos(%d,%d)}" % (fzc, cx, round(cyc))) if fzc != fz \
-                else ("{\\pos(%d,%d)}" % (cx, round(cyc)))   # cỡ chuẩn → khỏi ghi \fs (giữ hành vi cũ khi vừa)
+            tag = ("{\\an5\\fs%d\\pos(%d,%d)}" % (fzc, cx, round(cyc))) if fzc != fz \
+                else ("{\\an5\\pos(%d,%d)}" % (cx, round(cyc)))   # cỡ chuẩn → khỏi ghi \fs (giữ hành vi cũ khi vừa)
             f.write("Dialogue: 0,%s,%s,Default,,0,0,0,,%s%s\n" % (_fmt_sec(pa), _fmt_sec(pb), tag, wrapped))
     return len(cues), max_h_norm
 
