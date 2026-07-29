@@ -3251,6 +3251,21 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             _is_manual = (_r.get("source") == "manual")
             blur_band = (_r["y0"], _r["y1"], _r["H"],
                          _r.get("x0", 0.0), _r.get("x1", 1.0))   # +x0,x1 → blur ĐÚNG HỘP text (không full-width)
+        
+        if blur_band is None:
+            # Fallback mặc định khi không dò được dải chữ Trung (nhưng vẫn tích Che chữ)
+            _W, _H = 0, 0
+            try:
+                import xu_ly_video
+                _W, _H, _ = dai_sub._kich_thuoc(xu_ly_video.tim_exe("ffprobe"), os.path.abspath(video))
+            except Exception:
+                pass
+            _H = _H or 1920
+            _W = _W or 1080
+            if _H > _W:  # Video dọc
+                blur_band = (0.82, 0.88, _H, 0.05, 0.95)
+            else:        # Video ngang
+                blur_band = (0.80, 0.88, _H, 0.05, 0.95)
         # CHE Ở ĐÁY (MẶC ĐỊNH): blur DẢI ĐÁY full-width (KHÔNG đo ngang) + phụ đề Việt TĨNH đè lên đáy; KỆ chữ
         # Trung ở trên video. Đơn giản + ổn cho mọi clip. Tắt = env CHE_DAY=0 (che ĐÚNG dải chữ Trung dò được).
         # CHE_DAY chỉ ÉP dải-đáy khi sub gốc THỰC SỰ ở đáy (y0≥0.80). Sub gốc CAO hơn (vd 0.76) → ép xuống 0.82 sẽ
