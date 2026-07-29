@@ -900,7 +900,7 @@ def _chia_nhip(cues, max_ky_tu=58, min_doc=0.45, max_doc=5.0):
     return res
 
 
-def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4):
+def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phude_style="default"):
     """Sinh ASS đặt phụ đề Việt ĐÚNG vị trí (\\pos + \\an5) → ĐÈ LÊN dải blur, KHÔNG hard-code MarginV (đo thật
     force_style MarginV libass áp KHÔNG đáng tin: 72≡144), 2 DÒNG tự căn giữa quanh tâm (không vỡ). `segs` =
     list (t_on,t_off,y0,y1,x0,x1): mỗi cue → ĐOẠN chứa mốc-giữa-cue (sub DI CHUYỂN thì cue bám đúng đoạn) →
@@ -916,6 +916,37 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4):
     ol = max(1, round(ol_base * s))
     sh = max(1, round(1.0 * s))       # bóng đổ (drop shadow) — bít nét, che chữ Trung sau tốt hơn + nhìn viral
     cx = round(W / 2.0)
+
+    p_col = "&H00FFFFFF"
+    o_col = "&H00000000"
+    b_col = "&H00000000"
+    b_style = 1
+    sh_val = sh
+    
+    if phude_style == "black_on_white":
+        p_col = "&H00000000"
+        o_col = "&H00FFFFFF"
+        b_col = "&H00FFFFFF"
+        b_style = 3
+        sh_val = 0
+    elif phude_style == "black_on_yellow":
+        p_col = "&H00000000"
+        o_col = "&H0000FFFF"
+        b_col = "&H0000FFFF"
+        b_style = 3
+        sh_val = 0
+    elif phude_style == "white_on_yellow_black":
+        p_col = "&H00FFFFFF"
+        o_col = "&H00000000"
+        b_col = "&H0000FFFF"
+        b_style = 3
+        sh_val = 0
+    elif phude_style == "white_on_black":
+        p_col = "&H00FFFFFF"
+        o_col = "&H00000000"
+        b_col = "&H00000000"
+        b_style = 3
+        sh_val = 0
 
     # ===== AUTO-FIT cỡ chữ theo BỀ NGANG (fix phụ đề VIDEO DỌC tràn dải) =====
     # Bug: video dọc bề ngang hẹp mà font scale theo chiều CAO (H/288) → font to → câu dài wrap 4+ dòng → tràn
@@ -1004,7 +1035,7 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4):
                 "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, "
                 "Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n")
         # Bold=1 + Italic=1 + Shadow (bóng): chữ Việt ĐẬM, nét dày, có bóng → BÍT kín, che chữ Trung sau + style "viral".
-        f.write("Style: Default,Arial,%d,&H00FFFFFF,&H00000000,&H00000000,1,1,0,0,100,100,0,0,1,%d,%d,5,10,10,10,1\n\n" % (fz, ol, sh))
+        f.write("Style: Default,Arial,%d,%s,%s,%s,1,1,0,0,100,100,0,0,%d,%d,%d,5,10,10,10,1\n\n" % (fz, p_col, o_col, b_col, b_style, ol, sh_val))
         f.write("[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
         # KHÔNG cắt dòng (theo yêu cầu user): mỗi cue = 1 Dialogue NGUYÊN CÂU (giữ đúng nhịp gốc OCR [t_on,t_off]),
         # chữ đã nhỏ nên fit; libass tự xuống dòng nếu quá dài. Bật lại cắt-nhịp = env CHE_CAT_DONG=1.
@@ -1186,7 +1217,8 @@ def _fc_args(fc_str, dir=None):
 def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log,
                extra_vf=None, speed=1.0, wm_path=None, wm_pos="20:20", wm_scale="",
                bg_path=None, bg_vol=0.25, blur_band=None, blur_segs=None,
-               logo=None, text_wm=None, blur_boxes=None, video_slow=1.0, time_warp=None):
+               logo=None, text_wm=None, blur_boxes=None, video_slow=1.0, time_warp=None,
+               phude_style="default"):
     """Ghép video CUỐI trong 1 LẦN ENCODE.
     - Mặc định (chỉ che chữ + burn phụ đề): đường ĐƠN GIẢN như cũ (không đụng luồng khác).
     - Khi có biến đổi hình / tăng tốc / watermark / nhạc nền → gộp HẾT vào 1 filter_complex
@@ -1214,6 +1246,15 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                or float(video_slow or 1.0) < 0.999 or _has_warp)
     # Style sub: nếu biết dải → đặt MarginV để chữ Việt nằm ĐÚNG dải đã làm mờ (đè lên chữ gốc).
     style_sub = _STYLE_SUB
+    if phude_style != "default":
+        if phude_style == "black_on_white":
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+        elif phude_style == "black_on_yellow":
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+        elif phude_style == "white_on_yellow_black":
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
+        elif phude_style == "white_on_black":
+            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=0,BorderStyle=3,MarginV=18"
     if co_blur:
         _y0, _y1, _H = blur_band[:3]          # blur_band có thể là 5-tuple (y0,y1,H,x0,x1) — chỉ cần y cho MarginV
         if (_y0 + _y1) / 2.0 < 0.5:
@@ -1252,7 +1293,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                     _bx1 = blur_band[4] if len(blur_band) > 4 else 1.0
                     _segs = [(0.0, 1e9, blur_band[0], blur_band[1], _bx0, _bx1)]
                 _acand = "_burnpos_%d.ass" % os.getpid()
-                if _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs) > 0:
+                if _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style) > 0:
                     sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
         except Exception as _e:
             log_fn("⚠ Đặt phụ đề theo dải lỗi (%s) → phụ đề thường." % str(_e)[:50])
@@ -1265,7 +1306,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             # che dải chữ Trung thường nằm ở đáy (~20% dưới) bằng hộp đen
             vf.append("drawbox=x=0:y=ih*0.80:w=iw:h=ih*0.20:color=black@1.0:t=fill")
         if vi_srt:                                  # CHỈ burn phụ đề khi có srt (che độc lập: vi_srt=None)
-            vf.append(f"subtitles={srt_rel}:force_style='{_STYLE_SUB}'")
+            vf.append(f"subtitles={srt_rel}:force_style='{style_sub}'")
         cmd = [ff, "-y", "-i", os.path.abspath(video)]
         if audio_path:                              # thay audio (bản lồng tiếng)
             cmd += ["-i", os.path.abspath(audio_path)]
@@ -2676,7 +2717,8 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
          extra_vf=None, speed=1.0, wm_path=None, wm_pos="20:20", wm_scale="",
          bg_path=None, bg_vol=0.25, tat_tieng_goc=False, goc_vol=None, chi_asr=False,
          che_band_manual=None, dich_lai=False, giong_vol=None, af_loc="",
-         logo=None, text_wm=None, blur_boxes=None, chi_dich=False, chi_dub=False):
+         logo=None, text_wm=None, blur_boxes=None, chi_dich=False, chi_dub=False,
+         phude_style="default"):
     # chi_dich=True (TRANSLATE-PREFETCH): OCR(cache)→dịch→ghi vi.srt (+ trans-cache) rồi DỪNG (không dò-dải/
     # dub/encode). Để prefetch dịch NGÔN NGỮ KẾ trong lúc video hiện tại đang lồng tiếng (dịch mạng ∥ dub CPU).
     # chi_dub=True (SPLIT DUB↔ENCODE): OCR+dịch(cache)→DUB→lưu dub-cache (.dub.wav + .dubmeta.json = onsets/warp/
@@ -3448,7 +3490,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             if burn:   # CÓ phụ đề: burn phụ đề Việt + che chữ Trung + lồng tiếng (+ gộp biến đổi hình/tăng tốc)
                 ok_lt = burn_phude(video, vi_srt_burn, out_lt, che_chu=che_chu, audio_path=mix_wav,
                                    log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs,
-                                   video_slow=_vs, time_warp=_tw, **burn_kw)
+                                   video_slow=_vs, time_warp=_tw, phude_style=phude_style, **burn_kw)
             elif co_extra_hinh or _vs < 0.999 or _tw:   # biến đổi hình / video-slow / warp per-segment → re-encode
                 ok_lt = burn_phude(video, None, out_lt, che_chu=False, audio_path=mix_wav,
                                    log_fn=log_fn, video_slow=_vs, time_warp=_tw, **burn_kw)
@@ -3481,12 +3523,12 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             out_mp4 = os.path.join(thu_muc, ten + "_phude.mp4")
             # GIỮ biến đổi hình/tăng tốc (**burn_kw) như nhánh 'elif burn' — trước đây thiếu nên fallback
             # ra video gần như giống gốc (mất lật/watermark/tăng tốc → rủi ro bản quyền cho khách).
-            if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, **burn_kw):
+            if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, **burn_kw):
                 ket["video_phude"] = out_mp4
                 log_fn("✔ Xong video phụ đề: " + os.path.basename(out_mp4))
     elif burn:
         out_mp4 = os.path.join(thu_muc, ten + "_phude.mp4")
-        if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, **burn_kw):
+        if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, **burn_kw):
             ket["video_phude"] = out_mp4
             log_fn("✔ Xong video phụ đề: " + os.path.basename(out_mp4))
 

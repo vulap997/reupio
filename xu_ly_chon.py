@@ -92,6 +92,8 @@ def main():
                     help="Lấy lời thoại: ocr=Đọc từ sub (RapidOCR PP-OCRv5) | whisper=Giọng nói (Whisper) | rỗng=mặc định(OCR→Whisper)")
     ap.add_argument("--zoom", type=float, default=1.0,
                     help="Phóng to khung (>1.0 = cắt mép, giữ độ phân giải). 1.0 = giữ nguyên. Vd 1.15 = phóng 115%%.")
+    ap.add_argument("--phude-style", dest="phude_style", default="default",
+                    help="Kiểu hiển thị caption: default|black_on_white|black_on_yellow|white_on_yellow_black|white_on_black")
     ap.add_argument("--lang-tag", default="",
                     help="Render đa ngôn ngữ: gắn mã ngôn ngữ (vd 'en','ko') vào tên output → mỗi ngôn ngữ 1 file, không đè.")
     ap.add_argument("--target-lang", dest="target_lang", default="",
@@ -276,6 +278,7 @@ def main():
         burn_sub = a.phude or (bool(a.srt_co_san) and not a.long_tieng)
         try:
             ket = localize.chay(work, model_size=a.model, che_chu=not a.no_che, che_khac=a.che_khac, burn=burn_sub,
+                                phude_style=a.phude_style,
                                 lam_long_tieng=a.long_tieng, lam_tach_nhac=a.tach_nhac,
                                 voice=a.voice, engine=a.engine, srt_co_san=a.srt_co_san,
                                 tach_truoc=a.tach_truoc, ref_audio=a.ref_audio,

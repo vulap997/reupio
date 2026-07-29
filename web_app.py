@@ -3824,6 +3824,8 @@ def _lenh_xu_ly(full, o, pha=None):
         lenh += ["--bg-vol", str(o["bg_vol"])]
     if o.get("phude"):
         lenh.append("--phude")
+    if o.get("phude") and o.get("phude_style"):
+        lenh += ["--phude-style", str(o["phude_style"])]
     if not o.get("che_chu", True):
         lenh.append("--no-che")
     if o.get("che_khac"):
