@@ -279,18 +279,30 @@ def _parse_lo(resp, clen):
     d = {}
     if not resp:
         return d
+
+    def _clean_prefix(text):
+        prev = None
+        while text != prev:
+            prev = text
+            # Clean @00:00:00 or @00:00
+            text = re.sub(r"^\s*@\d+(?::\d+){1,2}(?:[.,]\d+)?\s*", "", text)
+            # Clean [2.3s ≤37] or similar
+            text = re.sub(r"^\s*\[[^\]]*\]\s*", "", text)
+            text = text.strip()
+        return text
+
     for l in resp.split("\n"):
         m = re.match(r"^\s*(\d+)\s*[\.\):\-]\s*(.+?)\s*$", l)
         if m:
             k = int(m.group(1))
             if 1 <= k <= clen:
                 v = m.group(2).strip().strip('"')
-                v = re.sub(r"^\s*\[[^\]]*\]\s*", "", v)   # phòng Gemini lỡ echo [Ts ≤N] đầu dòng → cắt bỏ
+                v = _clean_prefix(v)
                 d[k] = v
     if len(d) < clen * 0.6:     # lô KHÔNG đánh số → map theo THỨ TỰ
         seq = [x.strip() for x in resp.split("\n") if x.strip() and not x.strip().endswith(":")]
         seq = [re.sub(r"^\s*\d+\s*[\.\):\-]\s*", "", x) for x in seq]
-        seq = [re.sub(r"^\s*\[[^\]]*\]\s*", "", x) for x in seq]   # cắt [Ts ≤N] nếu Gemini echo (fallback)
+        seq = [_clean_prefix(x) for x in seq]
         d = {j + 1: seq[j] for j in range(min(len(seq), clen))}
     return d
 
