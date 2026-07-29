@@ -1043,18 +1043,20 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
             _cues_pos = _chia_nhip([(_sec(a), _sec(b), txt) for a, b, txt in cues])
         else:
             _cues_pos = [(_sec(a), _sec(b), txt) for a, b, txt in cues]
+        max_h_norm = 0.0
         for pa, pb, ptxt in _cues_pos:
             cy = _cy((pa + pb) / 2.0) * H
             fzc, lines = _fit(ptxt)                          # thu cỡ + xuống dòng để câu dài KHÔNG tràn (video dọc)
             wrapped = "\\N".join(lines)
             block_h = len(lines) * fzc * 1.28                # chiều cao khối chữ (ước lượng line-height)
+            max_h_norm = max(max_h_norm, block_h / H)
             m = H * 0.03                                     # lề an toàn trên/dưới
             cyc = min(cy, H - m - block_h / 2.0)             # KẸP: khối không lòi khỏi ĐÁY
             cyc = max(cyc, m + block_h / 2.0)                #      cũng không lòi khỏi ĐỈNH
             tag = ("{\\fs%d\\pos(%d,%d)}" % (fzc, cx, round(cyc))) if fzc != fz \
                 else ("{\\pos(%d,%d)}" % (cx, round(cyc)))   # cỡ chuẩn → khỏi ghi \fs (giữ hành vi cũ khi vừa)
             f.write("Dialogue: 0,%s,%s,Default,,0,0,0,,%s%s\n" % (_fmt_sec(pa), _fmt_sec(pb), tag, wrapped))
-    return len(cues)
+    return len(cues), max_h_norm
 
 
 def _canh_sub_theo_dub(vi_srt, dub_onsets, time_warp, out_srt, log_fn=log):
@@ -1242,6 +1244,37 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     # Cần split/overlay → ép đi đường filter_complex (gop) cho gọn 1 chỗ.
     blur_segs = [s for s in (blur_segs or []) if s] or None
     co_blur = bool(che_chu and (blur_band or blur_segs))
+    
+    # SRT copy & ASS generation (called early to get max_h_norm for cover box size calculation)
+    import shutil
+    sub_rel, sub_tmp = (os.path.basename(vi_srt) if vi_srt else None), None
+    sub_ass_rel = sub_ass_tmp = None
+    max_h_norm = 0.0
+    if vi_srt and os.path.isfile(vi_srt):
+        _cand = "_burnsub_%d.srt" % os.getpid()
+        try:
+            shutil.copyfile(vi_srt, os.path.join(base_dir, _cand))
+            sub_rel, sub_tmp = _cand, os.path.join(base_dir, _cand)
+        except OSError:
+            pass
+            
+    if co_blur and sub_tmp:
+        try:
+            _W, _Hp = _vW, _vH
+            if _W > 0 and _Hp > 0:
+                if blur_segs:
+                    _segs = blur_segs
+                else:
+                    _bx0 = blur_band[3] if len(blur_band) > 3 else 0.0
+                    _bx1 = blur_band[4] if len(blur_band) > 4 else 1.0
+                    _segs = [(0.0, 1e9, blur_band[0], blur_band[1], _bx0, _bx1)]
+                _acand = "_burnpos_%d.ass" % os.getpid()
+                _res, _max_h = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
+                if _res > 0:
+                    sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
+                    max_h_norm = _max_h
+        except Exception as _e:
+            log_fn("⚠ Đặt phụ đề theo dải lỗi (%s) → phụ đề thường." % str(_e)[:50])
     # KHUNG (logo/blur-box/watermark-chữ) cũng cần đường GỘP (gộp vào 1 encode, bỏ pass 2 đổi-khung khi ko reframe).
     co_khung = bool(blur_boxes or (logo and logo.get("path")) or xu_ly_video.co_text_wm(text_wm))
     # video_slow<1 (Video Assist uniform CŨ) hoặc time_warp (per-segment) → PHẢI đi đường GỘP (setpts slow
@@ -1282,37 +1315,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         # đáy). KHÔNG tính _mv theo pixel vì ASS hiểu MarginV theo PlayRes (~288) → lệch lên GIỮA màn.
     ff = _ffmpeg()
 
-    # SRT an toàn cho filter 'subtitles=': tên video gốc có thể chứa dấu phẩy / nháy / ':'
-    # (vd '一口气...,推荐电影') làm FFmpeg hiểu nhầm dải phân cách filter -> lỗi hoặc bỏ qua sub.
-    # Copy SRT sang tên ASCII trong base_dir (ffmpeg chạy cwd=base_dir) -> né sạch mọi ký tự lạ.
-    sub_rel, sub_tmp = (os.path.basename(vi_srt) if vi_srt else None), None
-    if vi_srt and os.path.isfile(vi_srt):
-        _cand = "_burnsub_%d.srt" % os.getpid()
-        try:
-            shutil.copyfile(vi_srt, os.path.join(base_dir, _cand))
-            sub_rel, sub_tmp = _cand, os.path.join(base_dir, _cand)
-        except OSError:
-            pass
-
-    # CHE+SUB: đặt phụ đề Việt ĐÈ LÊN dải blur (tâm dải chữ Trung đã dò) bằng ASS \pos — thay MarginV
-    # hard-code (động theo dải, 2 dòng tự căn). Không dò được W/H hoặc lỗi → lùi force_style thường.
-    sub_ass_rel = sub_ass_tmp = None
-    if co_blur and sub_tmp:
-        try:
-            _W, _Hp = _vW, _vH
-            if _W > 0 and _Hp > 0:
-                # segs cho ASS: ĐỘNG = blur_segs (phụ đề bám từng đoạn); TĨNH = 1 đoạn phủ toàn thời gian.
-                if blur_segs:
-                    _segs = blur_segs
-                else:
-                    _bx0 = blur_band[3] if len(blur_band) > 3 else 0.0
-                    _bx1 = blur_band[4] if len(blur_band) > 4 else 1.0
-                    _segs = [(0.0, 1e9, blur_band[0], blur_band[1], _bx0, _bx1)]
-                _acand = "_burnpos_%d.ass" % os.getpid()
-                if _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur) > 0:
-                    sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
-        except Exception as _e:
-            log_fn("⚠ Đặt phụ đề theo dải lỗi (%s) → phụ đề thường." % str(_e)[:50])
+    # (SRT copy & ASS generation moved early in function to compute max_h_norm)
 
     if not gop:
         # ===== ĐƯỜNG ĐƠN GIẢN (GIỮ NGUYÊN hành vi cũ cho case chỉ phụ đề) =====
@@ -1433,6 +1436,23 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         else:                                  # dải ĐỈNH (ở trên đầu)
             by0 = max(0.0, min(by0, 0.005))
             by1 = min(1.0, by1 + noi_bot)
+
+        # Tự động mở rộng dải che nếu chữ phụ đề Việt quá dài (nhiều dòng) làm tràn dải che mặc định
+        if max_h_norm > 0.0:
+            h_req = max_h_norm + 0.02   # thêm 2% lề an toàn
+            h_cur = by1 - by0
+            if h_cur < h_req:
+                cy_box = (by0 + by1) / 2.0
+                by0 = cy_box - h_req / 2.0
+                by1 = cy_box + h_req / 2.0
+                # Căn lề kẹp trong khoảng [0.0, 1.0]
+                if by0 < 0.0:
+                    by1 = min(1.0, by1 - by0)
+                    by0 = 0.0
+                elif by1 > 1.0:
+                    by0 = max(0.0, by0 - (by1 - 1.0))
+                    by1 = 1.0
+                _by0_txt, _by1_txt = by0, by1   # cập nhật cả text boundaries để không bị min/max cũ kéo lệch
             
         # CAP: Khống chế chiều cao động theo phụ đề gốc của chính video đó
         try:
@@ -1441,6 +1461,10 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             _cap_env = 0
         _cap_default = 0.12 if _is_landscape else 0.08
         _cap = _cap_env if _cap_env > 0 else _cap_default
+        
+        # Đảm bảo cap đủ rộng để không bóp méo/cắt phụ đề Việt thực tế
+        if max_h_norm > 0.0:
+            _cap = max(_cap, max_h_norm + 0.02)
         
         # Cắt bớt phần text dò được nếu chiều cao text gốc vượt quá cap (do nhiễu OCR...)
         if _by1_txt - _by0_txt > _cap:
