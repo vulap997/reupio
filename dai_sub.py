@@ -153,6 +153,9 @@ def detect_blur_band(video, srt=None, manual=None, log_fn=print):
             try:
                 import dai_sub_rapid
                 band = dai_sub_rapid.phat_hien_dai_rapid(va, log_fn=log_fn)
+                if not band:
+                    log_fn("ℹ Quét 8 khung hình chưa phát hiện dải sub → Dò quét sâu hơn với 20 khung hình...")
+                    band = dai_sub_rapid.phat_hien_dai_rapid(va, log_fn=log_fn, n_frames=20)
                 if band:
                     # band 5-tuple (y0,y1,H,x0,x1): x0/x1 = bề ngang HỘP text → blur đúng hộp (không full-width)
                     return {"source": "rapidocr", "y0": band[0], "y1": band[1], "H": band[2],
