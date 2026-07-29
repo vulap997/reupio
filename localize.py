@@ -993,6 +993,28 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
             lines = _wrap(txt, fzc)
         return fzc, lines
 
+    if not ass_path or not segs:
+        # Dry-run mode: chỉ đo đạc tính toán max_h_norm
+        try:
+            raw = open(srt_path, encoding="utf-8", errors="replace").read()
+        except OSError:
+            return 0, 0.0
+        cues = []
+        for blk in re.split(r"\n\s*\n", raw.strip()):
+            ls = [x for x in blk.splitlines() if x.strip()]
+            ti = next((i for i, l in enumerate(ls) if "-->" in l), -1)
+            if ti < 0:
+                continue
+            txt = "\\N".join(ls[ti + 1:]).strip()
+            if txt:
+                cues.append(txt)
+        max_h_norm = 0.0
+        for ptxt in cues:
+            fzc, lines = _fit(ptxt)
+            block_h = len(lines) * fzc * 1.28
+            max_h_norm = max(max_h_norm, block_h / H)
+        return len(cues), max_h_norm
+
     def _sec(ts):
         ts = ts.strip().replace(",", ".")
         hh, mm, ss = ts.split(":")
@@ -1262,19 +1284,10 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         try:
             _W, _Hp = _vW, _vH
             if _W > 0 and _Hp > 0:
-                if blur_segs:
-                    _segs = blur_segs
-                else:
-                    _bx0 = blur_band[3] if len(blur_band) > 3 else 0.0
-                    _bx1 = blur_band[4] if len(blur_band) > 4 else 1.0
-                    _segs = [(0.0, 1e9, blur_band[0], blur_band[1], _bx0, _bx1)]
-                _acand = "_burnpos_%d.ass" % os.getpid()
-                _res, _max_h = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
-                if _res > 0:
-                    sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
-                    max_h_norm = _max_h
+                # Dry run để tính max_h_norm trước nhằm điều chỉnh kích thước dải che chính xác
+                _, max_h_norm = _srt_to_ass_pos(sub_tmp, None, _W, _Hp, None, phude_style=phude_style, no_box=co_blur)
         except Exception as _e:
-            log_fn("⚠ Đặt phụ đề theo dải lỗi (%s) → phụ đề thường." % str(_e)[:50])
+            log_fn("⚠ Đo kích thước phụ đề lỗi (%s)" % str(_e)[:50])
     # KHUNG (logo/blur-box/watermark-chữ) cũng cần đường GỘP (gộp vào 1 encode, bỏ pass 2 đổi-khung khi ko reframe).
     co_khung = bool(blur_boxes or (logo and logo.get("path")) or xu_ly_video.co_text_wm(text_wm))
     # video_slow<1 (Video Assist uniform CŨ) hoặc time_warp (per-segment) → PHẢI đi đường GỘP (setpts slow
@@ -1493,6 +1506,22 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             bx0 = max(bx0, _le); bx1 = min(bx1, 1.0 - _le)
         bh = max(0.04, by1 - by0)
         bw = max(0.05, bx1 - bx0)            # bề ngang HỘP blur (chừa lề khi CHE_LE>0)
+        
+        # Thực hiện tạo file ASS thật dựa trên tọa độ dải che cuối cùng đã được tinh chỉnh hoàn hảo
+        if sub_tmp:
+            try:
+                _W, _Hp = _vW, _vH
+                if _W > 0 and _Hp > 0:
+                    if blur_segs:
+                        _segs = blur_segs
+                    else:
+                        _segs = [(0.0, 1e9, by0, by0 + bh, bx0, bx0 + bw)]
+                    _acand = "_burnpos_%d.ass" % os.getpid()
+                    _res, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
+                    if _res > 0:
+                        sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
+            except Exception as _e:
+                log_fn("⚠ Ghi file phụ đề theo dải cuối lỗi (%s)" % str(_e)[:50])
         # TRONG SUỐT (đỡ xấu): dải blur phủ ALPHA (CHE_ALPHA, mặc định 0.85) → ~15% hình gốc lộ nhẹ → dải MỀM,
         # bớt như thanh kiểm duyệt. Chữ Việt burn ĐÈ lên che phần giữa. Hạ CHE_ALPHA đẹp hơn NHƯNG chữ Trung
         # có thể lộ mờ (ngược với "che kín" — cân theo gu). blur MẠNH ĐÚNG HỘP text → chữ Hán không đọc được.
