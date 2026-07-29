@@ -3276,6 +3276,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
         
         if blur_band is None:
             # Fallback mặc định khi không dò được dải chữ Trung (nhưng vẫn tích Che chữ)
+            _is_manual = True  # Bỏ qua kéo sát đáy CHE_DAY và kẹp cứng đẩy xuống đáy
             _W, _H = 0, 0
             try:
                 import xu_ly_video
@@ -3284,8 +3285,8 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
                 pass
             _H = _H or 1920
             _W = _W or 1080
-            if _H > _W:  # Video dọc
-                blur_band = (0.82, 0.88, _H, 0.05, 0.95)
+            if _H > _W:  # Video dọc (chuyển lên 0.80-0.88 để bao phủ tốt chữ Trung và tránh bị cap đẩy xuống sát đáy)
+                blur_band = (0.80, 0.88, _H, 0.05, 0.95)
             else:        # Video ngang
                 blur_band = (0.80, 0.88, _H, 0.05, 0.95)
         # CHE Ở ĐÁY (MẶC ĐỊNH): blur DẢI ĐÁY full-width (KHÔNG đo ngang) + phụ đề Việt TĨNH đè lên đáy; KỆ chữ
