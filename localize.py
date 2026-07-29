@@ -994,11 +994,11 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         return fzc, lines
 
     if not ass_path or not segs:
-        # Dry-run mode: chỉ đo đạc tính toán max_h_norm
+        # Dry-run mode: chỉ đo đạc tính toán max_h_norm và max_w_norm
         try:
             raw = open(srt_path, encoding="utf-8", errors="replace").read()
         except OSError:
-            return 0, 0.0
+            return 0, 0.0, 0.0
         cues = []
         for blk in re.split(r"\n\s*\n", raw.strip()):
             ls = [x for x in blk.splitlines() if x.strip()]
@@ -1009,11 +1009,14 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
             if txt:
                 cues.append(txt)
         max_h_norm = 0.0
+        max_w_norm = 0.0
         for ptxt in cues:
             fzc, lines = _fit(ptxt)
             block_h = len(lines) * fzc * 1.28
             max_h_norm = max(max_h_norm, block_h / H)
-        return len(cues), max_h_norm
+            for line in lines:
+                max_w_norm = max(max_w_norm, _measure(line, fzc) / W)
+        return len(cues), max_h_norm, max_w_norm
 
     def _sec(ts):
         ts = ts.strip().replace(",", ".")
@@ -1066,17 +1069,20 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         else:
             _cues_pos = [(_sec(a), _sec(b), txt) for a, b, txt in cues]
         max_h_norm = 0.0
+        max_w_norm = 0.0
         for pa, pb, ptxt in _cues_pos:
             cy = _cy((pa + pb) / 2.0) * H
             fzc, lines = _fit(ptxt)                          # thu cỡ + xuống dòng để câu dài KHÔNG tràn (video dọc)
             wrapped = "\\N".join(lines)
             block_h = len(lines) * fzc * 1.28                # chiều cao khối chữ (ước lượng line-height)
             max_h_norm = max(max_h_norm, block_h / H)
+            for line in lines:
+                max_w_norm = max(max_w_norm, _measure(line, fzc) / W)
             cyc = cy
             tag = ("{\\an5\\fs%d\\pos(%d,%d)}" % (fzc, cx, round(cyc))) if fzc != fz \
                 else ("{\\an5\\pos(%d,%d)}" % (cx, round(cyc)))   # cỡ chuẩn → khỏi ghi \fs (giữ hành vi cũ khi vừa)
             f.write("Dialogue: 0,%s,%s,Default,,0,0,0,,%s%s\n" % (_fmt_sec(pa), _fmt_sec(pb), tag, wrapped))
-    return len(cues), max_h_norm
+    return len(cues), max_h_norm, max_w_norm
 
 
 def _canh_sub_theo_dub(vi_srt, dub_onsets, time_warp, out_srt, log_fn=log):
@@ -1270,6 +1276,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     sub_rel, sub_tmp = (os.path.basename(vi_srt) if vi_srt else None), None
     sub_ass_rel = sub_ass_tmp = None
     max_h_norm = 0.0
+    max_w_norm = 0.0
     if vi_srt and os.path.isfile(vi_srt):
         _cand = "_burnsub_%d.srt" % os.getpid()
         try:
@@ -1282,8 +1289,8 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         try:
             _W, _Hp = _vW, _vH
             if _W > 0 and _Hp > 0:
-                # Dry run để tính max_h_norm trước nhằm điều chỉnh kích thước dải che chính xác
-                _, max_h_norm = _srt_to_ass_pos(sub_tmp, None, _W, _Hp, None, phude_style=phude_style, no_box=co_blur)
+                # Dry run để tính max_h_norm và max_w_norm trước nhằm điều chỉnh kích thước dải che chính xác
+                _, max_h_norm, max_w_norm = _srt_to_ass_pos(sub_tmp, None, _W, _Hp, None, phude_style=phude_style, no_box=co_blur)
         except Exception as _e:
             log_fn("⚠ Đo kích thước phụ đề lỗi (%s)" % str(_e)[:50])
     # KHUNG (logo/blur-box/watermark-chữ) cũng cần đường GỘP (gộp vào 1 encode, bỏ pass 2 đổi-khung khi ko reframe).
@@ -1494,6 +1501,21 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                 by0 = by1 - _cap           # dải đáy → giữ ĐÁY, cắt phần trên
             else:
                 by1 = by0 + _cap           # dải đỉnh → giữ ĐỈNH, cắt phần dưới
+        # Tự động mở rộng bề ngang dải che nếu chữ phụ đề Việt dài hơn hộp che
+        if max_w_norm > 0.0:
+            w_req = max_w_norm + 0.04   # thêm 4% lề an toàn (2% mỗi bên)
+            w_cur = bx1 - bx0
+            if w_cur < w_req:
+                cx_box = (bx0 + bx1) / 2.0
+                if abs(cx_box - 0.5) > 0.1:
+                    cx_box = 0.5
+                bx0 = max(0.0, cx_box - w_req / 2.0)
+                bx1 = min(1.0, cx_box + w_req / 2.0)
+                if bx0 == 0.0:
+                    bx1 = min(1.0, w_req)
+                elif bx1 == 1.0:
+                    bx0 = max(0.0, 1.0 - w_req)
+
         # CÁCH LỀ (đỡ xấu, giống các video khác): dải blur chừa lề CHE_LE mỗi bên (mặc định 5% khung) thay vì
         # bám sát 2 mép. Chỉ THU vào (max/min) — nếu hộp text đã hẹp hơn thì GIỮ, không nới ra ngoài lề.
         try:
@@ -1515,7 +1537,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                     else:
                         _segs = [(0.0, 1e9, by0, by0 + bh, bx0, bx0 + bw)]
                     _acand = "_burnpos_%d.ass" % os.getpid()
-                    _res, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
+                    _res, _, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
                     if _res > 0:
                         sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
             except Exception as _e:
