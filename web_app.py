@@ -2093,7 +2093,7 @@ def _nen_tang_tu_path(parts):
     return ("", "")
 
 
-def liet_ke_file(gioi_han=400):
+def liet_ke_file(gioi_han=10000):
     import datetime
     items = []
     # (đường dẫn, nhãn nhóm). processed_videos = đã rerender; còn lại = cào gốc theo nền tảng

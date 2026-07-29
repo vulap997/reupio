@@ -808,7 +808,8 @@ def chia_sub_dai(segs_vi, max_ky_tu=42):
 
 
 # ---------------- FFmpeg: che chữ + burn phụ đề ----------------
-_STYLE_SUB = "FontName=Arial,FontSize=16,Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=1,MarginV=18"
+_font_size = int(os.environ.get("SUB_FONT_SIZE", "20"))
+_STYLE_SUB = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=1,MarginV=18"
 
 
 def _enc_video(ff):
@@ -899,7 +900,7 @@ def _chia_nhip(cues, max_ky_tu=58, min_doc=0.45, max_doc=5.0):
     return res
 
 
-def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=9, ol_base=2.4):
+def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4):
     """Sinh ASS đặt phụ đề Việt ĐÚNG vị trí (\\pos + \\an5) → ĐÈ LÊN dải blur, KHÔNG hard-code MarginV (đo thật
     force_style MarginV libass áp KHÔNG đáng tin: 72≡144), 2 DÒNG tự căn giữa quanh tâm (không vỡ). `segs` =
     list (t_on,t_off,y0,y1,x0,x1): mỗi cue → ĐOẠN chứa mốc-giữa-cue (sub DI CHUYỂN thì cue bám đúng đoạn) →
@@ -1346,13 +1347,22 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         # hay tràn ngoài → nới theo tỉ lệ chiều cao dải, tối thiểu 5% khung. Tăng thêm qua env
         # CHE_NOI (vd CHE_NOI=0.10 = nới 10% khung) nếu vẫn còn sót.
         try:
+            import dai_sub
+            _W, _Hp, _ = dai_sub._kich_thuoc(xu_ly_video.tim_exe("ffprobe"), os.path.abspath(video))
+        except Exception:
+            _W, _Hp = 0, 0
+        _is_landscape = (_W > 0 and _Hp > 0 and _W > _Hp)
+
+        try:
             _noi_env = float(os.environ.get("CHE_NOI", "") or 0)
         except ValueError:
             _noi_env = 0.0
         # Tinh chỉnh động theo chiều cao phụ đề gốc để ôm khít chữ chính xác cho từng video
         h_sub = by1 - by0
-        noi_top = max(_noi_env, max(0.008, min(0.025, h_sub * 0.15)))
-        noi_bot = max(_noi_env, max(0.005, min(0.015, h_sub * 0.10)))
+        _top_pad_coef = 0.08 if _is_landscape else 0.15
+        _bot_pad_coef = 0.05 if _is_landscape else 0.10
+        noi_top = max(_noi_env, max(0.005 if _is_landscape else 0.008, min(0.025, h_sub * _top_pad_coef)))
+        noi_bot = max(_noi_env, max(0.003 if _is_landscape else 0.005, min(0.015, h_sub * _bot_pad_coef)))
         
         if (by0 + by1) / 2.0 >= 0.5:          # dải ở NỬA DƯỚI
             if by1 >= 0.85:
@@ -3099,7 +3109,9 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
                     _ca.luu_noi_dung(_band_key, ".band.json", json.dumps(_r))
                 except Exception:
                     pass
-        if _r.get("source") != "none":
+        _is_manual = False
+        if _r and _r.get("source") != "none":
+            _is_manual = (_r.get("source") == "manual")
             blur_band = (_r["y0"], _r["y1"], _r["H"],
                          _r.get("x0", 0.0), _r.get("x1", 1.0))   # +x0,x1 → blur ĐÚNG HỘP text (không full-width)
         # CHE Ở ĐÁY (MẶC ĐỊNH): blur DẢI ĐÁY full-width (KHÔNG đo ngang) + phụ đề Việt TĨNH đè lên đáy; KỆ chữ
@@ -3122,11 +3134,19 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             _auto_dong = _y0s[len(_y0s) // 2] < 0.85          # mép trên box (median) chưa chạm đáy thật
         _env_cd = os.environ.get("CHE_DONG", "")
         _che_dong = (_env_cd == "1") or (_auto_dong and _env_cd != "0")
-        if blur_band and os.environ.get("CHE_DAY", "1") != "0" and blur_band[0] >= 0.80 and not _che_dong:
+        if blur_band and os.environ.get("CHE_DAY", "1") != "0" and blur_band[0] >= 0.80 and not _che_dong and not _is_manual:
             # Sub ở ĐÁY: GIỮ mép-trên DÒ ĐƯỢC (min với 0.82 → khỏi lộ đỉnh chữ khi text cao hơn) + kéo đáy sát khung.
             # Full-width (0,1) → cách lề áp ở burn qua CHE_LE (thanh đáy CÓ lề, không bám 2 mép). Trước ép cứng 0.82
             # làm dải bắt đầu DƯỚI đỉnh chữ (0.80–0.82) → lộ đỉnh chữ Trung (lỗi user báo).
-            blur_band = (min(blur_band[0], 0.82), max(blur_band[1], 0.99), blur_band[2], 0.0, 1.0)
+            # Tối ưu hóa cho video ngang (aspect ratio > 1): mốc kéo lên chỉ cần min 0.86 thay vì 0.82 để dải mờ mỏng/đẹp hơn.
+            try:
+                import xu_ly_video
+                _W, _H, _ = dai_sub._kich_thuoc(xu_ly_video.tim_exe("ffprobe"), os.path.abspath(video))
+            except Exception:
+                _W, _H = 0, 0
+            _is_landscape = (_W > 0 and _H > 0 and _W > _H)
+            _top_limit = 0.88 if _is_landscape else 0.82
+            blur_band = (min(blur_band[0], _top_limit), max(blur_band[1], 0.99), blur_band[2], 0.0, 1.0)
         # HỢP NHẤT (ưu tiên): HỘP vị-trí lấy LUÔN từ OCR đọc-text (box_sink _ocr_boxes) — chuẩn (RapidOCR det) +
         # timing KHỚP câu dịch + KHÔNG quét 2 lần. OCR không chạy (whisper/no-hardsub) mà vẫn có dải → dò riêng.
         if blur_band and _che_dong:   # blur ĐỘNG (bật tay CHE_DONG=1 HOẶC auto khi sub không ở đáy thật)

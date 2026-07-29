@@ -5641,6 +5641,8 @@ async function lsTaiChon(){
   if(plats.length>1){ alert("Mỗi lượt chỉ tải được 1 nền tảng (do cơ chế cào). Hãy lọc 'nền tảng' ở trên rồi tải lại."); return; }
   const ids=sel.map(it=>it.url||it.key).filter(Boolean);
   if(!ids.length){ alert("Các bài đã chọn không có link/ID để tải."); return; }
+  window._crawlTarget = ids.length;
+  window._crawlT0 = Date.now();
   let r; try{ r=await post("/api/anh_cao",{platform:plats[0],ids}); }catch(e){ r=null; }
   if(!r){ alert("Lỗi gửi tải."); return; }
   if(r.ok===false){ if(!r.limit) alert(r.msg||"Lỗi"); return; }
@@ -6845,6 +6847,8 @@ function xemDong(){ document.getElementById("xemModal").style.display="none"; if
 async function xemCao(){
   const ids=[..._xemSel].filter(Boolean);   // lấy từ Set (GIỮ qua re-render + đổi filter), không từ DOM
   if(!ids.length){ alert("Chưa chọn video nào!"); return; }
+  window._crawlTarget = ids.length;
+  window._crawlT0 = Date.now();
   const r=await post("/api/anh_cao",{platform,ids});
   if(r&&r.ok===false){ if(!r.limit) alert(r.msg||"Lỗi"); return; }   // limit -> banner Nâng cấp tự hiện
   xemDong();
@@ -7014,12 +7018,17 @@ function capNhatProgress(lines, running){
   for(let i=lines.length-1;i>=0;i--){ if(/Bắt đầu/.test(lines[i])){ batDau=i; break; } }
   const from=Math.max(0,batDau);
   let daTai=0;
-  for(let i=lines.length-1;i>=from;i--){ const m=lines[i].match(/Đã tải\s+(\d+)\s*[:：]/); if(m){ daTai=+m[1]; break; } }
+  for(let i=lines.length-1;i>=from;i--){ const m=lines[i].match(/Đã tải\s+(\d+)(?:\/\d+)?\s*video\s+(?:·|-)/); if(m){ daTai=+m[1]; break; } }
   if(!daTai){ for(let i=from;i<lines.length;i++){ if(/Đã tải 1 video/.test(lines[i])) daTai++; } }
   let videoLM=null;   // dự phòng: format "Video X/Y" nếu có
-  for(let i=lines.length-1;i>=0;i--){ const mv=lines[i].match(/Video\s+(\d+)\/(\d+)/); if(mv){videoLM=mv;break;} }
+  for(let i=lines.length-1;i>=from;i--){ const mv=lines[i].match(/Video\s+(\d+)\/(\d+)/); if(mv){videoLM=mv;break;} }
   let cnt=null, pct=0, label="Đang xử lý...";
-  const tgt=(parseInt((document.getElementById("soLuong")||{}).value)||window._crawlTarget||0);
+  let logTarget = 0;
+  for(let i=lines.length-1;i>=from;i--){
+    const m=lines[i].match(/Đã tải\s+\d+\/(\d+)\s*video/);
+    if(m){ logTarget=+m[1]; break; }
+  }
+  const tgt=logTarget || window._crawlTarget || parseInt((document.getElementById("soLuong")||{}).value) || 0;
   if(!window._crawlT0) window._crawlT0=Date.now();   // chưa có mốc (cào tự động / reload) → đặt ngay để tính tốc độ
   if(videoLM){                                   // yt-dlp: theo "Video X/Y"
     cnt={n:+videoLM[1], d:+videoLM[2]};
