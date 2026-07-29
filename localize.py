@@ -1449,9 +1449,10 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         # bớt như thanh kiểm duyệt. Chữ Việt burn ĐÈ lên che phần giữa. Hạ CHE_ALPHA đẹp hơn NHƯNG chữ Trung
         # có thể lộ mờ (ngược với "che kín" — cân theo gu). blur MẠNH ĐÚNG HỘP text → chữ Hán không đọc được.
         try:
-            _alpha = min(1.0, max(0.3, float(os.environ.get("CHE_ALPHA", "") or 0.85)))
+            _alpha_default = 0.85 if phude_style == "default" else 1.0
+            _alpha = min(1.0, max(0.3, float(os.environ.get("CHE_ALPHA", "") or _alpha_default)))
         except ValueError:
-            _alpha = 0.85
+            _alpha = 0.85 if phude_style == "default" else 1.0
         _mix = "" if _alpha >= 0.999 else f",format=yuva420p,colorchannelmixer=aa={_alpha:.3f}"
         if phude_style == "default":
             fc.append(f"[{cur}]split[cmain][cband]")
