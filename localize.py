@@ -911,7 +911,7 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         fz_base = float(os.environ.get("CHE_SUB_FZ", "") or fz_base)   # cỡ chữ phụ đề (mặc định nhỏ gọn)
     except ValueError:
         pass
-    s = H / 288.0
+    s = min(W, H) / 288.0
     fz = max(8, round(fz_base * s))
     ol = max(1, round(ol_base * s))
     sh = max(1, round(1.0 * s))       # bóng đổ (drop shadow) — bít nét, che chữ Trung sau tốt hơn + nhìn viral
@@ -1227,6 +1227,11 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     speed    : tăng tốc — setpts (video) + atempo (audio), áp ở CUỐI (whisper đã nghe tốc độ gốc).
     wm_path/bg_path: watermark / nhạc nền (gộp cùng lần encode)."""
     base_dir = os.path.dirname(os.path.abspath(vi_srt)) if vi_srt else os.path.dirname(os.path.abspath(video))
+    try:
+        import dai_sub
+        _vW, _vH, _ = dai_sub._kich_thuoc(xu_ly_video.tim_exe("ffprobe"), os.path.abspath(video))
+    except Exception:
+        _vW, _vH = 0, 0
     extra_vf = [f for f in (extra_vf or []) if f]
     spd = float(speed or 1.0)
     co_wm = bool(wm_path and os.path.isfile(wm_path))
@@ -1244,24 +1249,35 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     _has_warp = bool(time_warp)
     gop = bool(extra_vf or co_wm or co_bg or co_speed or co_blur or co_khung
                or float(video_slow or 1.0) < 0.999 or _has_warp)
+    
+    # Calculate simple path style variables (scaled for vertical video)
+    fs_val = _font_size
+    ol_val = 3
+    sh_val = 1
+    if _vW > 0 and _vH > 0 and _vH > _vW:
+        # Scale down by W / H to counteract ffmpeg automatic subtitles scaling by height
+        fs_val = max(8, round(_font_size * _vW / _vH))
+        ol_val = max(1, round(3.0 * _vW / _vH))
+        sh_val = max(0, round(1.0 * _vW / _vH))
+
     # Style sub: nếu biết dải → đặt MarginV để chữ Việt nằm ĐÚNG dải đã làm mờ (đè lên chữ gốc).
-    style_sub = _STYLE_SUB
+    style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow={sh_val},MarginV=18"
     if phude_style != "default":
         _b_style = 1 if co_blur else 3
         if phude_style == "black_on_white":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "black_on_yellow":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "white_on_yellow_black":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
         elif phude_style == "white_on_black":
-            style_sub = f"FontName=Arial,FontSize={_font_size},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline=3,Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
     if co_blur:
         _y0, _y1, _H = blur_band[:3]          # blur_band có thể là 5-tuple (y0,y1,H,x0,x1) — chỉ cần y cho MarginV
         if (_y0 + _y1) / 2.0 < 0.5:
             # Dải sub gốc ở NỬA TRÊN → đặt chữ Việt LÊN TRÊN (Alignment=8 = giữa-trên), MarginV tính từ ĐỈNH.
             _mv = max(8, int(round(_y0 * _H)))
-            style_sub = _STYLE_SUB.replace("MarginV=18", "Alignment=8,MarginV=%d" % _mv)
+            style_sub = style_sub.replace("MarginV=18", "Alignment=8,MarginV=%d" % _mv)
         # Dải ở dưới: GIỮ MarginV mặc định (=18, sát đáy) → chữ Việt nằm ĐÁY đè lên dải đã blur (đã nới sát
         # đáy). KHÔNG tính _mv theo pixel vì ASS hiểu MarginV theo PlayRes (~288) → lệch lên GIỮA màn.
     ff = _ffmpeg()
@@ -1283,8 +1299,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     sub_ass_rel = sub_ass_tmp = None
     if co_blur and sub_tmp:
         try:
-            import dai_sub
-            _W, _Hp, _ = dai_sub._kich_thuoc(xu_ly_video.tim_exe("ffprobe"), os.path.abspath(video))
+            _W, _Hp = _vW, _vH
             if _W > 0 and _Hp > 0:
                 # segs cho ASS: ĐỘNG = blur_segs (phụ đề bám từng đoạn); TĨNH = 1 đoạn phủ toàn thời gian.
                 if blur_segs:
