@@ -927,25 +927,25 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         p_col = "&H00000000"
         o_col = "&H00FFFFFF"
         b_col = "&H00FFFFFF"
-        b_style = 1 if no_box else 3
+        b_style = 3
         sh_val = 0
     elif phude_style == "black_on_yellow":
         p_col = "&H00000000"
         o_col = "&H0000FFFF"
         b_col = "&H0000FFFF"
-        b_style = 1 if no_box else 3
+        b_style = 3
         sh_val = 0
     elif phude_style == "white_on_yellow_black":
         p_col = "&H00FFFFFF"
         o_col = "&H00000000"
         b_col = "&H0000FFFF"
-        b_style = 1 if no_box else 3
+        b_style = 3
         sh_val = 0
     elif phude_style == "white_on_black":
         p_col = "&H00FFFFFF"
         o_col = "&H00000000"
         b_col = "&H00000000"
-        b_style = 1 if no_box else 3
+        b_style = 3
         sh_val = 0
 
     # ===== AUTO-FIT cỡ chữ theo BỀ NGANG (fix phụ đề VIDEO DỌC tràn dải) =====
@@ -993,7 +993,7 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
             lines = _wrap(txt, fzc)
         return fzc, lines
 
-    if not ass_path or not segs:
+    if not ass_path:
         # Dry-run mode: chỉ đo đạc tính toán max_h_norm và max_w_norm
         try:
             raw = open(srt_path, encoding="utf-8", errors="replace").read()
@@ -1027,6 +1027,8 @@ def _srt_to_ass_pos(srt_path, ass_path, W, H, segs, fz_base=13, ol_base=2.4, phu
         return "%d:%02d:%05.2f" % (int(s // 3600), int((s % 3600) // 60), s % 60)
 
     def _cy(tmid):                           # tâm y(%) của đoạn chứa tmid; không có → đoạn gần nhất
+        if not segs:
+            return 0.85
         best, bd = None, 1e9
         for sg in segs:
             if sg[0] <= tmid <= sg[1]:
@@ -1246,7 +1248,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                extra_vf=None, speed=1.0, wm_path=None, wm_pos="20:20", wm_scale="",
                bg_path=None, bg_vol=0.25, blur_band=None, blur_segs=None,
                logo=None, text_wm=None, blur_boxes=None, video_slow=1.0, time_warp=None,
-               phude_style="default"):
+               phude_style="default", goc_vol=None, phude_size=0):
     """Ghép video CUỐI trong 1 LẦN ENCODE.
     - Mặc định (chỉ che chữ + burn phụ đề): đường ĐƠN GIẢN như cũ (không đụng luồng khác).
     - Khi có biến đổi hình / tăng tốc / watermark / nhạc nền → gộp HẾT vào 1 filter_complex
@@ -1275,6 +1277,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     import shutil
     sub_rel, sub_tmp = (os.path.basename(vi_srt) if vi_srt else None), None
     sub_ass_rel = sub_ass_tmp = None
+    _acand = "_burnpos_%d.ass" % os.getpid()
     max_h_norm = 0.0
     max_w_norm = 0.0
     if vi_srt and os.path.isfile(vi_srt):
@@ -1290,7 +1293,8 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             _W, _Hp = _vW, _vH
             if _W > 0 and _Hp > 0:
                 # Dry run để tính max_h_norm và max_w_norm trước nhằm điều chỉnh kích thước dải che chính xác
-                _, max_h_norm, max_w_norm = _srt_to_ass_pos(sub_tmp, None, _W, _Hp, None, phude_style=phude_style, no_box=co_blur)
+                fz_base_val = phude_size if (phude_size and phude_size > 0) else 13
+                _, max_h_norm, max_w_norm = _srt_to_ass_pos(sub_tmp, None, _W, _Hp, None, fz_base=fz_base_val, phude_style=phude_style, no_box=co_blur)
         except Exception as _e:
             log_fn("⚠ Đo kích thước phụ đề lỗi (%s)" % str(_e)[:50])
     # KHUNG (logo/blur-box/watermark-chữ) cũng cần đường GỘP (gộp vào 1 encode, bỏ pass 2 đổi-khung khi ko reframe).
@@ -1298,42 +1302,61 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     # video_slow<1 (Video Assist uniform CŨ) hoặc time_warp (per-segment) → PHẢI đi đường GỘP (setpts slow
     # video chỉ có ở đó); đường đơn-giản bỏ qua. time_warp = list (o0,o1,f) → slow VIDEO biến thiên từng đoạn.
     _has_warp = bool(time_warp)
+    co_goc_vol = False
+    if audio_path is None and goc_vol is not None:
+        try:
+            co_goc_vol = abs(float(goc_vol) - 1.0) > 1e-4
+        except (TypeError, ValueError):
+            pass
     gop = bool(extra_vf or co_wm or co_bg or co_speed or co_blur or co_khung
-               or float(video_slow or 1.0) < 0.999 or _has_warp)
+               or float(video_slow or 1.0) < 0.999 or _has_warp or co_goc_vol)
     
     # Calculate simple path style variables (scaled for vertical video)
-    fs_val = _font_size
+    fs_val = phude_size if (phude_size and phude_size > 0) else _font_size
     ol_val = 3
     sh_val = 1
     if _vW > 0 and _vH > 0 and _vH > _vW:
         # Scale down by W / H to counteract ffmpeg automatic subtitles scaling by height
-        fs_val = max(8, round(_font_size * _vW / _vH))
+        fs_val = max(8, round(fs_val * _vW / _vH))
         ol_val = max(1, round(3.0 * _vW / _vH))
         sh_val = max(0, round(1.0 * _vW / _vH))
 
     # Style sub: nếu biết dải → đặt MarginV để chữ Việt nằm ĐÚNG dải đã làm mờ (đè lên chữ gốc).
-    style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow={sh_val},MarginV=18"
+    mv_val = 45 if (_vW > 0 and _vH > 0 and _vH > _vW) else 18
+    style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow={sh_val},MarginV={mv_val}"
     if phude_style != "default":
-        _b_style = 1 if co_blur else 3
+        _b_style = 3
         if phude_style == "black_on_white":
-            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H00FFFFFF,BackColour=&H00FFFFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV={mv_val}"
         elif phude_style == "black_on_yellow":
-            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00000000,OutlineColour=&H0000FFFF,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV={mv_val}"
         elif phude_style == "white_on_yellow_black":
-            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H0000FFFF,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV={mv_val}"
         elif phude_style == "white_on_black":
-            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV=18"
+            style_sub = f"FontName=Arial,FontSize={fs_val},Bold=1,Italic=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,Outline={ol_val},Shadow=0,BorderStyle={_b_style},MarginV={mv_val}"
     if co_blur:
         _y0, _y1, _H = blur_band[:3]          # blur_band có thể là 5-tuple (y0,y1,H,x0,x1) — chỉ cần y cho MarginV
         if (_y0 + _y1) / 2.0 < 0.5:
             # Dải sub gốc ở NỬA TRÊN → đặt chữ Việt LÊN TRÊN (Alignment=8 = giữa-trên), MarginV tính từ ĐỈNH.
             _mv = max(8, int(round(_y0 * _H)))
-            style_sub = style_sub.replace("MarginV=18", "Alignment=8,MarginV=%d" % _mv)
+            style_sub = style_sub.replace(f"MarginV={mv_val}", "Alignment=8,MarginV=%d" % _mv)
         # Dải ở dưới: GIỮ MarginV mặc định (=18, sát đáy) → chữ Việt nằm ĐÁY đè lên dải đã blur (đã nới sát
         # đáy). KHÔNG tính _mv theo pixel vì ASS hiểu MarginV theo PlayRes (~288) → lệch lên GIỮA màn.
     ff = _ffmpeg()
 
     # (SRT copy & ASS generation moved early in function to compute max_h_norm)
+
+    co_cat_dong = os.environ.get("CHE_CAT_DONG", "0") == "1"
+    if not co_blur and co_cat_dong and sub_tmp:
+        try:
+            _W, _Hp = _vW, _vH
+            if _W > 0 and _Hp > 0:
+                fz_base_val = phude_size if (phude_size and phude_size > 0) else 13
+                _res, _, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, None, fz_base=fz_base_val, phude_style=phude_style, no_box=False)
+                if _res > 0:
+                    sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
+        except Exception as _e:
+            log_fn("⚠ Ghi file phụ đề tách dòng lỗi (%s)" % str(_e)[:50])
 
     if not gop:
         # ===== ĐƯỜNG ĐƠN GIẢN (GIỮ NGUYÊN hành vi cũ cho case chỉ phụ đề) =====
@@ -1343,7 +1366,10 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             # che dải chữ Trung thường nằm ở đáy (~20% dưới) bằng hộp đen
             vf.append("drawbox=x=0:y=ih*0.80:w=iw:h=ih*0.20:color=black@1.0:t=fill")
         if vi_srt:                                  # CHỈ burn phụ đề khi có srt (che độc lập: vi_srt=None)
-            vf.append(f"subtitles={srt_rel}:force_style='{style_sub}'")
+            if sub_ass_rel:
+                vf.append(f"subtitles={sub_ass_rel}")
+            else:
+                vf.append(f"subtitles={srt_rel}:force_style='{style_sub}'")
         cmd = [ff, "-y", "-i", os.path.abspath(video)]
         if audio_path:                              # thay audio (bản lồng tiếng)
             cmd += ["-i", os.path.abspath(audio_path)]
@@ -1361,6 +1387,9 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
         kq = _burn_run(cmd, base_dir, log_fn, path="simple", che=bool(che_chu), sub=bool(vi_srt))
         if sub_tmp:
             try: os.remove(sub_tmp)
+            except OSError: pass
+        if sub_ass_tmp:
+            try: os.remove(sub_ass_tmp)
             except OSError: pass
         if kq.returncode != 0:
             log_fn("⚠ FFmpeg lỗi: " + (kq.stderr or "")[-400:])
@@ -1536,8 +1565,8 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                         _segs = blur_segs
                     else:
                         _segs = [(0.0, 1e9, by0, by0 + bh, bx0, bx0 + bw)]
-                    _acand = "_burnpos_%d.ass" % os.getpid()
-                    _res, _, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, phude_style=phude_style, no_box=co_blur)
+                    fz_base_val = phude_size if (phude_size and phude_size > 0) else 13
+                    _res, _, _ = _srt_to_ass_pos(sub_tmp, os.path.join(base_dir, _acand), _W, _Hp, _segs, fz_base=fz_base_val, phude_style=phude_style, no_box=co_blur)
                     if _res > 0:
                         sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
             except Exception as _e:
@@ -1644,6 +1673,13 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
     if co_speed:
         atempo = "atempo=2.0,atempo=%s" % (spd / 2.0) if spd > 2.0 else "atempo=%s" % spd
         fc.append(f"[{base_a}]{atempo}[asp]"); cura = "asp"
+    if audio_path is None and goc_vol is not None:
+        try:
+            gv = float(goc_vol)
+            if abs(gv - 1.0) > 1e-4:
+                fc.append(f"[{cura}]volume={gv:.4f}[gocv]"); cura = "gocv"
+        except (TypeError, ValueError):
+            pass
     if co_bg:
         fc.append(f"[{bg_in}:a]volume={bg_vol}[bgv]")
         fc.append(f"[{cura}][bgv]amix=inputs=2:duration=first:normalize=0[ao]"); amap = "[ao]"
@@ -2835,15 +2871,11 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
          bg_path=None, bg_vol=0.25, tat_tieng_goc=False, goc_vol=None, chi_asr=False,
          che_band_manual=None, dich_lai=False, giong_vol=None, af_loc="",
          logo=None, text_wm=None, blur_boxes=None, chi_dich=False, chi_dub=False,
-         phude_style="default"):
-    # chi_dich=True (TRANSLATE-PREFETCH): OCR(cache)→dịch→ghi vi.srt (+ trans-cache) rồi DỪNG (không dò-dải/
-    # dub/encode). Để prefetch dịch NGÔN NGỮ KẾ trong lúc video hiện tại đang lồng tiếng (dịch mạng ∥ dub CPU).
-    # chi_dub=True (SPLIT DUB↔ENCODE): OCR+dịch(cache)→DUB→lưu dub-cache (.dub.wav + .dubmeta.json = onsets/warp/
-    # slow) rồi DỪNG (KHÔNG mux/encode). Encode-phase (job kế) HIT dub-cache + restore 3 global → burn khớp hình-tiếng.
-    # dich_lai=True ("Render TỪ ĐẦU"): BỎ QUA cache lookup srt+dub → nghe+dịch+lồng tiếng MỚI (vẫn LƯU
-    # đè cache để lần reuse sau dùng bản mới). KEY vẫn tính bình thường để bước lưu hoạt động.
-    # chi_asr=True (DỊCH THỦ CÔNG): chỉ chạy ASR → ghi phụ đề GỐC (zh.srt) rồi DỪNG (không dịch/lồng/ghép),
-    # để người dùng tự dịch (ChatGPT/Gemini) rồi nhập lại qua srt_co_san ở lượt sau.
+         phude_style="default", che_dong=None, phude_size=0, che_cat_dong=None):
+    if che_dong is not None:
+        os.environ["CHE_DONG"] = "1" if che_dong else "0"
+    if che_cat_dong is not None:
+        os.environ["CHE_CAT_DONG"] = "1" if che_cat_dong else "0"
     if not os.path.isfile(video):
         log_fn("⚠ Không thấy file video: " + video)
         return None
@@ -2861,7 +2893,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
     # (thay vì encode riêng B1/B3) — xem burn_phude. ASR vẫn chạy trên `video` tốc độ gốc.
     burn_kw = dict(extra_vf=extra_vf, speed=speed, wm_path=wm_path, wm_pos=wm_pos,
                    wm_scale=wm_scale, bg_path=bg_path, bg_vol=bg_vol,
-                   logo=logo, text_wm=text_wm, blur_boxes=blur_boxes)
+                   logo=logo, text_wm=text_wm, blur_boxes=blur_boxes, goc_vol=goc_vol)
     globals()["_LAST_VIDEO_SLOW"] = 1.0   # reset: chỉ _ghep_track_khop (dub MỚI) mới đặt S; cache-hit/no-dub → 1.0
     globals()["_LAST_TIME_WARP"] = None   # reset warp per-segment (tránh dùng lại warp cũ ở cache-hit/no-dub)
     globals()["_LAST_DUB_ONSETS"] = None  # reset bản đồ vị-trí dub (cache-hit/no-dub → giữ phụ đề gốc, không căn nhầm)
@@ -3240,7 +3272,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
     # Che chữ gốc: DÒ DẢI sub gốc (OpenCV) 1 lần → làm mờ ĐÚNG dải đó (đè sub Việt lên).
     # Không chắc → blur_band=None → burn_phude lùi về hộp đen cố định đáy. Tắt: env CHE_DAI=0.
     blur_band = blur_segs = None
-    if che_chu and not cung_ngon_ngu:
+    if che_chu:
         # QUYẾT ĐỊNH dải che DÙNG CHUNG với preview (dai_sub.detect_blur_band) — cùng logic/fallback/ffmpeg.
         # Cổng "có cần che không" (che_chu/cung_ngon_ngu) GIỮ Ở ĐÂY (nghiệp vụ render); detector chỉ trả "ở đâu".
         import dai_sub
@@ -3258,7 +3290,11 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
         if _pb:
             try:
                 _r = json.load(open(_pb, encoding="utf-8"))
-                log_fn("[CACHE HIT band] Dùng lại dải che đã dò.")
+                if _r and _r.get("source") == "none":
+                    _r = None
+                    log_fn("[CACHE IGNORED band] Dải che cũ bị lỗi/none → dò lại.")
+                else:
+                    log_fn("[CACHE HIT band] Dùng lại dải che đã dò.")
             except Exception:
                 _r = None
         if _r is None:
@@ -3324,7 +3360,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             blur_band = (min(blur_band[0], _top_limit), max(blur_band[1], 0.99), blur_band[2], 0.0, 1.0)
         # HỢP NHẤT (ưu tiên): HỘP vị-trí lấy LUÔN từ OCR đọc-text (box_sink _ocr_boxes) — chuẩn (RapidOCR det) +
         # timing KHỚP câu dịch + KHÔNG quét 2 lần. OCR không chạy (whisper/no-hardsub) mà vẫn có dải → dò riêng.
-        if blur_band and _che_dong:   # blur ĐỘNG (bật tay CHE_DONG=1 HOẶC auto khi sub không ở đáy thật)
+        if _che_dong:   # blur ĐỘNG (bật tay CHE_DONG=1 HOẶC auto khi sub không ở đáy thật)
             _ob = locals().get("_ocr_boxes") or []
             _bk = _ca.tinh_key("boxes", _vhash=_vhash, e_fps=os.environ.get("CHE_DONG_FPS", ""),
                                e_chedong=os.environ.get("CHE_DONG", "")) if _vhash else None
@@ -3348,10 +3384,13 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
                             log_fn("🎯 Blur động: dùng lại %d vị-trí đã CACHE (hardsub render lại — KHỎI quét)." % len(_segs))
                     except Exception:
                         pass
-                if blur_segs is None and _r.get("source") == "rapidocr":
+                if blur_segs is None:
                     try:
                         import dai_sub_rapid
-                        _segs = dai_sub_rapid.phat_hien_hop_dong(video, log_fn=log_fn)
+                        _co_dinh = (_r is None or _r.get("source") == "none")
+                        y_min = max(0.0, blur_band[0] - 0.03) if (blur_band and len(blur_band) >= 2 and not _co_dinh) else None
+                        y_max = min(1.0, blur_band[1] + 0.03) if (blur_band and len(blur_band) >= 2 and not _co_dinh) else None
+                        _segs = dai_sub_rapid.phat_hien_hop_dong(video, log_fn=log_fn, y_min=y_min, y_max=y_max)
                         if _segs and len(_segs) >= 2:
                             blur_segs = [tuple(s) for s in _segs]
                             if _bk:
@@ -3374,6 +3413,22 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
                     co_blur = True
             except Exception as _e:
                 log_fn("⚠ Lỗi khi dò chữ Trung khác: " + str(_e))
+
+    inst_wav = None
+    if not lam_long_tieng and lam_tach_nhac:
+        goc_wav_tmp = os.path.join(thu_muc, ten + "_goc_tmp.wav")
+        try:
+            log_fn("🎵 Đang tách lời (giữ nhạc) bằng Demucs...")
+            lay_audio(video, goc_wav_tmp)
+            inst = tach_nhac(goc_wav_tmp, log_fn=log_fn)
+            if inst and os.path.isfile(inst):
+                inst_wav = inst
+        except Exception as _e:
+            log_fn("⚠ Tách lời (giữ nhạc) lỗi: " + str(_e))
+        finally:
+            if os.path.isfile(goc_wav_tmp):
+                try: os.remove(goc_wav_tmp)
+                except OSError: pass
 
     if lam_long_tieng:
         dur = _thoi_luong(video) or (segs_vi[-1][1] + 2)
@@ -3620,13 +3675,15 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             if burn and _onsets and os.environ.get("DUB_SUB_SYNC", "1") != "0":
                 vi_srt_burn = _canh_sub_theo_dub(
                     vi_srt, _onsets, _tw, os.path.join(thu_muc, ten + ".dubsync.vi.srt"), log_fn=log_fn)
+            _kw = burn_kw.copy(); _kw["goc_vol"] = None
             if burn:   # CÓ phụ đề: burn phụ đề Việt + che chữ Trung + lồng tiếng (+ gộp biến đổi hình/tăng tốc)
                 ok_lt = burn_phude(video, vi_srt_burn, out_lt, che_chu=che_chu, audio_path=mix_wav,
                                    log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs,
-                                   video_slow=_vs, time_warp=_tw, phude_style=phude_style, **burn_kw)
+                                   video_slow=_vs, time_warp=_tw, phude_style=phude_style,
+                                   phude_size=phude_size, **_kw)
             elif co_extra_hinh or _vs < 0.999 or _tw:   # biến đổi hình / video-slow / warp per-segment → re-encode
                 ok_lt = burn_phude(video, None, out_lt, che_chu=False, audio_path=mix_wav,
-                                   log_fn=log_fn, video_slow=_vs, time_warp=_tw, **burn_kw)
+                                   log_fn=log_fn, video_slow=_vs, time_warp=_tw, **_kw)
             else:      # CHỈ lồng tiếng, KHÔNG biến đổi gì: GIỮ NGUYÊN hình (copy video) — chỉ thay tiếng
                 ff = _ffmpeg()
                 base = [ff, "-y", "-i", video, "-i", mix_wav, "-map", "0:v:0", "-map", "1:a:0",
@@ -3656,14 +3713,19 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             out_mp4 = os.path.join(thu_muc, ten + "_phude.mp4")
             # GIỮ biến đổi hình/tăng tốc (**burn_kw) như nhánh 'elif burn' — trước đây thiếu nên fallback
             # ra video gần như giống gốc (mất lật/watermark/tăng tốc → rủi ro bản quyền cho khách).
-            if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, **burn_kw):
+            _kw = burn_kw.copy(); _kw["goc_vol"] = None
+            if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, phude_size=phude_size, **_kw):
                 ket["video_phude"] = out_mp4
                 log_fn("✔ Xong video phụ đề: " + os.path.basename(out_mp4))
-    elif burn:
+    elif burn or (goc_vol is not None and abs(float(goc_vol) - 1.0) > 1e-4) or inst_wav:
         out_mp4 = os.path.join(thu_muc, ten + "_phude.mp4")
-        if burn_phude(video, vi_srt, out_mp4, che_chu=che_chu, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, **burn_kw):
+        _kw = burn_kw.copy()
+        if burn_phude(video, vi_srt if burn else None, out_mp4, che_chu=che_chu, audio_path=inst_wav, log_fn=log_fn, blur_band=blur_band, blur_segs=blur_segs, phude_style=phude_style, phude_size=phude_size, **_kw):
             ket["video_phude"] = out_mp4
-            log_fn("✔ Xong video phụ đề: " + os.path.basename(out_mp4))
+            log_fn("✔ Xong video phụ đề: " + os.path.basename(out_mp4) if burn else "✔ Xong video render: " + os.path.basename(out_mp4))
+        if inst_wav and os.path.isfile(inst_wav):
+            try: os.remove(inst_wav)
+            except OSError: pass
 
     # dọn thư mục tách demucs nếu còn (trường hợp tách trước mà không lồng tiếng)
     d = os.path.join(thu_muc, "_demucs")
@@ -3709,6 +3771,7 @@ def main():
     ap.add_argument("video")
     ap.add_argument("--model", default="small")
     ap.add_argument("--no-che", action="store_true", help="Không che chữ Trung")
+    ap.add_argument("--che-dong", action="store_true", help="Chỉ che khi có chữ Trung (che động)")
     ap.add_argument("--che-khac", action="store_true", help="Che chữ Trung khác")
     ap.add_argument("--no-burn", action="store_true", help="Chỉ xuất .srt, không ghép video")
     ap.add_argument("--long-tieng", action="store_true", help="Lồng tiếng Việt (edge-tts)")
@@ -3741,7 +3804,7 @@ def main():
              engine=a.engine, srt_co_san=a.srt_co_san, tach_truoc=a.tach_truoc,
              ref_audio=a.ref_audio, tts_engine=a.tts, goc_vol=a.goc_vol, chi_asr=a.chi_asr,
              dich_lai=a.dich_lai, giong_vol=a.giong_vol, af_loc=a.af, chi_dich=a.chi_dich,
-             chi_dub=a.chi_dub)
+             chi_dub=a.chi_dub, che_dong=a.che_dong)
     except Exception:
         # In traceback có tiền tố LOG: → render worker (web_app) bắt được & hiện trong Nhật ký,
         # thay vì chết âm thầm chỉ thấy "lỗi". sys.exit(1) để web đánh dấu trạng thái 'loi'.

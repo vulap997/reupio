@@ -209,6 +209,36 @@ def _bili_login_nobrowser(udd):
         return None
 
 
+def _xhs_login_nobrowser(udd, plat):
+    """Xiaohongshu check KHÔNG mở browser — đọc cookie từ profile (cookie_decrypt DPAPI) + httpx gọi trang chủ.
+    Tránh fingerprint Playwright HEADLESS GIẾT phiên (gốc của 'cào lúc được lúc không', 'tự văng phiên')."""
+    try:
+        import cookie_decrypt
+        domain = "xiaohongshu.com" if plat == "xhs" else "rednote.com"
+        ck = cookie_decrypt.doc_cookies(udd, domain)
+    except Exception:
+        return None
+    if not ck:
+        return "out"   # không có cookie trên đĩa
+    if not ck.get("web_session") and not ck.get("id_token"):
+        return "out"
+    try:
+        import httpx
+        url = "https://www.xiaohongshu.com" if plat == "xhs" else "https://www.rednote.com"
+        cookie_str = "; ".join("%s=%s" % (k, v) for k, v in ck.items())
+        r = httpx.get(url, headers={"User-Agent": UA, "Cookie": cookie_str}, timeout=15.0)
+        if r.status_code != 200:
+            return None
+        html = r.text
+        if '"loggedIn":true' in html:
+            return "in"
+        if '"loggedIn":false' in html:
+            return "out"
+        return None
+    except Exception:
+        return None
+
+
 def _dom_login(page, url, login_texts):
     """Dò DOM trang chủ: nút đăng nhập (login_texts / 'log in') HIỆN → 'out'; avatar → 'in'; else None.
     Dùng cho nền tảng web (dy/wb): cookie hết hạn → trang hiện nút đăng nhập lại → bắt được 'xanh giả'."""
@@ -365,8 +395,8 @@ def _dy_login(ctx, cookies, udd=None):
                 const hasLogin = els.some(e => {
                     if (!vis(e)) return false;
                     const t = (e.textContent || '').trim();
-                    if (t.length > 6) return false;
-                    return t === '登录' || t === '登 录' || t === '登錄';
+                    if (t.length > 10) return false;
+                    return t === '登录' || t === '登 录' || t === '登錄' || /^(login|log\\s?in)$/i.test(t);
                 });
                 let has = null;
                 try { has = window.localStorage.getItem('HasUserLogin'); } catch (e) {}
@@ -431,6 +461,17 @@ def _check(p, plat):
             import cookie_decrypt
             ck = cookie_decrypt.doc_cookies(udd, "bilibili.com")
             return "in" if (ck and ck.get("SESSDATA")) else "out"
+        except Exception:
+            return "unknown"
+    if plat in ("xhs", "rednote"):
+        lv = _xhs_login_nobrowser(udd, plat)
+        if lv in ("in", "out"):
+            return lv
+        try:
+            import cookie_decrypt
+            domain = "xiaohongshu.com" if plat == "xhs" else "rednote.com"
+            ck = cookie_decrypt.doc_cookies(udd, domain)
+            return "in" if (ck and (ck.get("id_token") or ck.get("web_session"))) else "out"
         except Exception:
             return "unknown"
     # Mở profile NGẦM — vừa đóng cửa sổ login thì profile còn bị khóa -> retry vài lần

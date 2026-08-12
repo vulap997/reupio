@@ -94,11 +94,16 @@ def main():
             ghi_log(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] LỖI: {e}")
             return 1
 
-    lenh = [PYTHON_VENV, "main.py", "--platform", platform, "--lt", "qrcode",
+    mc_platform = "xhs" if platform == "rednote" else platform
+    lenh = [PYTHON_VENV, "main.py", "--platform", mc_platform, "--lt", "qrcode",
             "--get_comment", "no", "--save_data_option", "jsonl",
             "--headless", "yes", "--type", che_do]
 
     env = os.environ.copy()
+    if platform == "rednote":
+        env["MC_XHS_INTL"] = "1"
+        env["MC_XHS_PROFILE"] = "rednote_user_data_dir"
+        env["MC_XHS_LEAF"] = "rednote"
     if che_do == "search":
         lenh += ["--keywords", noi_dung.replace("\n", ","), "--crawler_max_notes_count", so]
         env["DY_SORT_TYPE"] = str(cfg.get("sort", 0))

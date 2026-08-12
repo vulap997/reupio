@@ -83,9 +83,14 @@ def main():
     for kenh in kenh_list:
         nt = doan_nen_tang(kenh)
         lenh, cwd = lenh_creator(nt, kenh, so)
+        env = os.environ.copy()
+        if nt == "rednote":
+            env["MC_XHS_INTL"] = "1"
+            env["MC_XHS_PROFILE"] = "rednote_user_data_dir"
+            env["MC_XHS_LEAF"] = "rednote"
         try:
             kq = subprocess.run(lenh, cwd=cwd, capture_output=True,
-                                text=True, encoding="utf-8", errors="replace")
+                                text=True, encoding="utf-8", errors="replace", env=env)
             out = (kq.stdout or "") + (kq.stderr or "")
             if nt in NEN_TANG_YTDLP:        # yt-dlp in "YTDLP_DONE N"
                 so_moi = next((int(d.split()[-1]) for d in out.splitlines()

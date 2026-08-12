@@ -15,7 +15,11 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "lang_en.j
 
 OVERRIDE = {
     # ----- Nav -----
-    "Cào ngay": "Crawl now", "⚡ Cào ngay": "⚡ Crawl now",
+    "Tìm và tải video": "Find & download video", "⚡ Tìm và tải video": "⚡ Find & download video",
+    "Tải video": "Download video", "3. Tải video": "3. Download video",
+    "Bỏ qua video đã tải (không trùng)": "Skip downloaded videos (no duplicates)",
+    "Hàng đợi & Tiến trình": "Queue & Progress", "📋 Hàng đợi & Tiến trình": "📋 Queue & Progress",
+    "Lịch sử tải": "Download history", "🕘 Lịch sử tải": "🕘 Download history",
     "Gợi ý kênh": "Channel suggestions", "🔎 Gợi ý kênh": "🔎 Channel suggestions",
     "Theo dõi": "Tracking", "Hẹn giờ": "Scheduler",
     "Trợ lý AI": "AI assistant", "🤖 Trợ lý AI": "🤖 AI assistant",
@@ -95,6 +99,16 @@ OVERRIDE = {
     "Đang chạy...": "Running...", "Sẵn sàng": "Ready", "so với hôm qua": "vs yesterday",
     "đã cào": "crawled", "Tổng video đã cào": "Total videos crawled",
     "Đang xử lý...": "Processing...", "Hoàn tất.": "Done.", "Đã dừng.": "Stopped.",
+    # ----- Giao diện gộp tab Render -----
+    "🎙️ Lồng tiếng & Tùy chọn": "🎙️ Dubbing & Options",
+    "📁 Cài đặt xuất & Render": "📁 Export & Render Settings",
+    "📁 Tải watermark": "📁 Upload watermark",
+    "📁 Tải logo": "📁 Upload logo",
+    "🎬 Render": "🎬 Render",
+    "🚀 Render ngay": "🚀 Render now",
+    "Lấy sub từ chữ chạy trên video": "Get subtitles from video text",
+    "Lấy sub từ âm thanh video": "Get subtitles from video audio",
+    "Chỉ che khi có chữ (Che động)": "Only blur when text is visible (Dynamic blur)",
 }
 
 

@@ -52,7 +52,10 @@ def main():
     vf = ["hflip"] if o.get("mirror") else []
     burned = os.path.join(tdir, "_pv_burn.mp4")
     ok = localize.burn_phude(clip, srt, burned, che_chu=bool(o.get("che_chu")),
-                             log_fn=lambda *a, **k: None, blur_band=bb, extra_vf=vf)
+                             log_fn=lambda *a, **k: None, blur_band=bb, extra_vf=vf,
+                             phude_style=o.get("phude_style", "default"),
+                             phude_size=o.get("phude_size", 0),
+                             che_cat_dong=bool(o.get("che_cat_dong")))
     src2 = burned if (ok and os.path.isfile(burned)) else clip
 
     # 5) bien_doi_khung: logo + watermark CHỮ + đổi khung (1 pass cuối)

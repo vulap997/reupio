@@ -10,11 +10,12 @@ None → caller (detect_blur_band) lùi Tesseract → OpenCV. Tắt: env CHE_RAP
 import os
 
 
-def _box_1frame_cheap(fr, cv2, np):
+def _box_1frame_cheap(fr, cv2, np, y_min=None, y_max=None):
     """Tìm HỘP sub 1 frame bằng phân tích ảnh RẺ (trắng + gradient như ocr_timing, KHÔNG OCR → ~100× nhanh
     hơn RapidOCR det). Sub = DẢI NGANG chữ trắng-viền rộng nhất ở vùng 25–93%. Trả (y0,y1,x0,x1)% hoặc None."""
     H, W = fr.shape[:2]
-    y_lo, y_hi = int(H * 0.22), int(H * 0.995)   # quét TỚI 99.5% (hardsub Douyin hay sát ĐÁY 92-99%; trước 93% bỏ sót → fail OCR)
+    y_lo = int(H * y_min) if y_min is not None else int(H * 0.22)
+    y_hi = int(H * y_max) if y_max is not None else int(H * 0.995)   # quét TỚI 99.5% (hardsub Douyin hay sát ĐÁY 92-99%; trước 93% bỏ sót → fail OCR)
     # CROP vùng đáy [y_lo:y_hi] TRƯỚC khi cvtColor/Laplacian → chỉ xử lý ~78% frame (bỏ 22% trên không dùng)
     # → cvtColor+Laplacian nhanh hơn, KẾT QUẢ Y HỆT (rowcov/cols vẫn lấy đúng các hàng cũ). mask giờ index từ y_lo.
     g = cv2.cvtColor(fr[y_lo:y_hi, :], cv2.COLOR_BGR2GRAY)
@@ -42,7 +43,7 @@ def _box_1frame_cheap(fr, cv2, np):
     return (max(0.0, y0 - 0.005), min(1.0, y1 + 0.006), max(0.0, x0 - 0.008), min(1.0, x1 + 0.008))
 
 
-def phat_hien_hop_dong(video, log_fn=print, fps_sample=4.0, n_max=4000):
+def phat_hien_hop_dong(video, log_fn=print, fps_sample=4.0, n_max=4000, y_min=None, y_max=None):
     """Dò HỘP sub ĐỘNG theo thời gian (sub DI CHUYỂN trong clip) → list (t_on, t_off, y0, y1, x0, x1) mỗi
     ĐOẠN vị-trí. Sample ~fps_sample fps (đọc tuần tự grab/read), dò box RẺ mỗi mẫu, GOM mẫu liên tiếp cùng
     vị-trí (tâm y gần ≤0.045, gap ≤0.8s) thành đoạn → blur/phụ đề bám theo. None nếu < 1 đoạn tin cậy.
@@ -85,7 +86,7 @@ def phat_hien_hop_dong(video, log_fn=print, fps_sample=4.0, n_max=4000):
                 ok, fr = cap.read()
                 if not ok or fr is None:
                     break
-                samples.append((fidx / fps, _box_1frame_cheap(fr, cv2, np)))
+                samples.append((fidx / fps, _box_1frame_cheap(fr, cv2, np, y_min=y_min, y_max=y_max)))
             else:
                 if not cap.grab():
                     break
@@ -154,7 +155,8 @@ def phat_hien_dai_rapid(video, log_fn=print, n_frames=8):
         if H <= 0 or nfr <= 0 or W <= 0:
             cap.release()
             return None
-        y_off = int(H * 0.45)            # OCR ~55% dưới (sub có video nằm ~57% nên không cắt) → clustering tự tách
+        # default H*0.45, but we scan from 0 (whole screen) to detect text at any height.
+        y_off = 0
         sc = 1280.0 / W if W > 1280 else 1.0   # thu nhỏ cho det nhanh
         boxes = []   # mỗi box: (yc_frac, y0_frac, y1_frac, w_frac, xc_frac, frame_k)
         crops = []   # (k, crop_bgr) — GIỮ để dò CHỮ-ĐỔI (phân biệt SUB vs biển-hiệu-TĨNH) ở bước chọn cluster

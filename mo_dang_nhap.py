@@ -87,16 +87,19 @@ def _da_login(ctx, plat):
                         const hasLogin = els.some(e => {
                             if (!vis(e)) return false;
                             const t = (e.textContent || '').trim();
-                            if (t.length > 6) return false;
-                            return t === '登录' || t === '登 录' || t === '登錄';
+                            if (t.length > 10) return false;
+                            return t === '登录' || t === '登 录' || t === '登錄' || /^(login|log\\s?in)$/i.test(t);
                         });
                         let has = null;
                         try { has = window.localStorage.getItem('HasUserLogin'); } catch (e) {}
                         const title = document.title || '';
                         const blen = document.body ? (document.body.innerText || '').length : 0;
                         const chan = /验证码|verify|captcha/i.test(title) || blen < 40;
-                        return { hasLogin, has, chan };
+                        const loading = !document.body || document.body.innerHTML.trim() === "" || document.readyState === "loading";
+                        return { hasLogin, has, chan, loading };
                     }""")
+                if sig.get("loading"):
+                    return False
                 if sig.get("hasLogin"):
                     return False
                 if sig.get("chan"):        # trang captcha/degraded -> KHÔNG tin cờ cũ (tránh đóng oan)

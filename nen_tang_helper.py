@@ -21,6 +21,7 @@ _DOAN = [
     ("youtube.com", "yt"), ("youtu.be", "yt"),
     ("bilibili.com", "bili"), ("b23.tv", "bili"),
     ("xiaohongshu.com", "xhs"), ("xhslink.com", "xhs"),
+    ("rednote.com", "rednote"),
     ("weibo.com", "wb"), ("weibo.cn", "wb"),
     ("kuaishou.com", "ks"),
     ("twitter.com", "tw"), ("x.com", "tw"),
@@ -42,7 +43,8 @@ def lenh_creator(platform, link, so):
     if platform in NEN_TANG_YTDLP:
         return ([PYTHON_VENV, "tai_ytdlp.py", "--platform", platform,
                  "--type", "creator", "--input", link, "--count", str(so)], THU_MUC_GOC)
-    return ([PYTHON_VENV, "main.py", "--platform", platform, "--lt", "qrcode",
+    mc_platform = "xhs" if platform == "rednote" else platform
+    return ([PYTHON_VENV, "main.py", "--platform", mc_platform, "--lt", "qrcode",
              "--get_comment", "no", "--save_data_option", "jsonl",
              "--headless", "yes", "--type", "creator",
              "--creator_id", link, "--crawler_max_notes_count", str(so)], THU_MUC_CRAWLER)

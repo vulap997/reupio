@@ -153,7 +153,7 @@ Khi khách hàng mua Gói Năm hoặc Gói Vĩnh Viễn, họ sẽ được tặ
 
 ## 8. HƯỚNG DẪN DÙNG TỪNG CHỨC NĂNG
 
-**Cấu trúc menu (thanh trái) v1.3.7:** ⚡ Cào ngay · ▶ Theo dõi kênh · 👤 Kênh nguồn (chỉ hiện khi có LLN Page) · 🔀 Quy trình · ✨ Trợ lý AI · 📁 File đã tải · 🎬 Đã render · 🕐 Lịch sử cào · 🎬 Render · ✂️ Băm nhỏ · 📤 Đăng bài · ⚙️ Cài đặt · 💎 Bảng Giá · 🎫 Gói của tôi. Đầu trang có **wizard 5 bước**: Đăng nhập → Chọn nền tảng → Cào video → Xem trước → Render & Đăng.
+**Cấu trúc menu (thanh trái) v1.3.7:** ⚡ Tìm và tải video · ▶ Theo dõi kênh · 👤 Kênh nguồn (chỉ hiện khi có LLN Page) · 🔀 Quy trình · ✨ Trợ lý AI · 📁 File đã tải · 🎬 Đã render · 🕐 Lịch sử tải · 🎬 Render · ✂️ Băm nhỏ · 📤 Đăng bài · ⚙️ Cài đặt · 💎 Bảng Giá · 🎫 Gói của tôi. Đầu trang có **wizard 5 bước**: Đăng nhập → Chọn nền tảng → Cào video → Xem trước → Render & Đăng.
 > Lưu ý: **"Lồng tiếng" không còn là menu riêng** (nằm trong tab Render); **"Theo dõi kênh" và "Hẹn giờ cào" đã gộp vào tab 🔀 Quy trình**.
 
 ### 8.1. Cào video
@@ -170,7 +170,7 @@ Chọn nền tảng → chọn cách cào → nhập nội dung → bấm **BẮ
 Nút **"Xem trước & chọn"**: liệt kê bài theo từ khóa/kênh (chỉ lấy thông tin, chưa tải) để **tick chọn** đúng bài muốn lấy rồi mới cào. Hỗ trợ XHS/Douyin/Bilibili.
 
 ### 8.3. Gợi ý kênh / gợi ý từ khóa
-Trong tab **Cào ngay** có nút **"✨ Gợi ý"**: nhập từ khóa → tool tìm & **xếp kênh theo lượt follow** → tick chọn → đưa vào cào kênh hoặc theo dõi. (Chạy ~1–2 phút; cần đăng nhập sẵn.) Với Douyin/Bilibili còn có gợi ý **dịch từ khóa sang tiếng Trung** cho ra nhiều kết quả hơn.
+Trong tab **Tìm và tải video** có nút **"✨ Gợi ý"**: nhập từ khóa → tool tìm & **xếp kênh theo lượt follow** → tick chọn → đưa vào cào kênh hoặc theo dõi. (Chạy ~1–2 phút; cần đăng nhập sẵn.) Với Douyin/Bilibili còn có gợi ý **dịch từ khóa sang tiếng Trung** cho ra nhiều kết quả hơn.
 
 ### 8.4. Theo dõi kênh (PRO/UNLIMITED)
 Nằm trong tab **🔀 Quy trình** (chọn Nguồn = Kênh → 👁 Theo dõi), hoặc menu **▶ Theo dõi kênh**. Tool kiểm tra kênh **định kỳ**, kênh nào có video mới thì tải ngay (bỏ qua video đã có). Đặt "Kiểm tra mỗi … phút" (khuyên 15–30). **Không tức thời** (nền tảng không báo mới, phải kiểm tra định kỳ). Cần **máy bật + đã đăng nhập**. FREE: 0 kênh; PRO: 3 kênh; UNLIMITED: không giới hạn.

@@ -33,6 +33,15 @@ def co_nvidia():
         return False
 
 
+def lay_ten_gpu():
+    try:
+        r = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+                           capture_output=True, text=True, creationflags=_NO_WINDOW, timeout=10)
+        return (r.stdout or "").strip()
+    except Exception:
+        return ""
+
+
 def main():
     if not co_nvidia():
         print("⚠ Không thấy GPU NVIDIA (nvidia-smi) — máy này Whisper chạy CPU, KHÔNG cần gói CUDA.")
@@ -41,6 +50,27 @@ def main():
     pkgs = ["nvidia-cuda-runtime-cu12>=12,<13", "nvidia-cublas-cu12", "nvidia-cudnn-cu12>=9,<10"]
     subprocess.run([_uv(), "pip", "install", "--python", sys.executable] + pkgs,
                    check=True, creationflags=_NO_WINDOW)
+
+    gpu_name = lay_ten_gpu()
+    is_blackwell = any(x in gpu_name for x in ["5070", "5080", "5090", "Blackwell"])
+
+    if is_blackwell:
+        print("\n=== Phát hiện GPU Blackwell (%s) → cài PyTorch CUDA 12.8 (~2.5GB) ===" % gpu_name, flush=True)
+        idx_url = "https://download.pytorch.org/whl/cu128"
+        torch_pkgs = ["torch>=2.7.0", "torchaudio>=2.7.0"]
+    else:
+        print("\n=== Cài/sửa PyTorch CUDA để tăng tốc tách nhạc nền (Demucs) VÀ lồng tiếng (~2.5GB) ===", flush=True)
+        idx_url = "https://download.pytorch.org/whl/cu124"
+        torch_pkgs = ["torch", "torchaudio"]
+
+    try:
+        subprocess.run([_uv(), "pip", "install", "--python", sys.executable, "--reinstall",
+                        "--extra-index-url", idx_url] + torch_pkgs,
+                       check=True, creationflags=_NO_WINDOW)
+        print("✅ Đã cài đặt PyTorch CUDA thành công.", flush=True)
+    except Exception as e:
+        print("❌ Lỗi khi cài đặt PyTorch CUDA: %s" % str(e)[:160], flush=True)
+
     # VERIFY THẬT: nạp cublas64_12.dll y như Whisper (sau _add_cuda_dll_dirs) — để biết CHẮC đã ăn,
     # không chỉ "cài xong". Cài đúng mà vẫn fail ở đây = phu_de.py CŨ (chưa thêm dir cudart vào DLL path).
     print("\n=== Kiểm tra nạp cuBLAS (giống Whisper) ===", flush=True)

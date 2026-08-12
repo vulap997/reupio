@@ -68,7 +68,7 @@ _PARSE_JS = r"""(re) => {
       loai: isVid ? 'video' : 'anh',
       video: isVid,
       so_anh: 0,
-      url: (a.href || '').split('?')[0],
+      url: (a.href || ''),
       link: (a.href || ''),     // GIỮ ?xsec_token — BẮT BUỘC để mở note + tải video (né 461)
       like: '', time: 0, nick: '', user_id: '', avatar: ''
     });
@@ -176,6 +176,83 @@ class XHSBrowser:
         await self.page.goto(f"{self.domain}/explore/{note_id}", wait_until="domcontentloaded", timeout=60000)
         await self.page.wait_for_timeout(2500)
 
+    async def get_single_note_info(self, url):
+        """Lấy thông tin của một video/bài viết đơn lẻ từ DOM/InitialState."""
+        if self.intl and "xiaohongshu.com" in (url or ""):
+            url = url.replace("xiaohongshu.com", "rednote.com")
+        await self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        await self.page.wait_for_timeout(3000)
+        
+        if await self.can_login():
+            raise Exception("Need login")
+            
+        item = await self.page.evaluate("""() => {
+            if (typeof window.__INITIAL_STATE__ === 'undefined') return null;
+            const state = window.__INITIAL_STATE__;
+            if (state.note && state.note.noteDetailMap) {
+                const map = state.note.noteDetailMap;
+                const noteId = Object.keys(map)[0];
+                if (noteId) {
+                    const note = map[noteId].note;
+                    const title = note.title || note.desc || "";
+                    const thumb = (note.imageList && note.imageList[0]) ? 
+                        (note.imageList[0].urlDefault || note.imageList[0].url || note.imageList[0].urlPre || "") : "";
+                    const isVid = note.type === "video" || !!note.video;
+                    const nick = note.user ? note.user.nickname : "";
+                    const avatar = note.user ? note.user.avatar : "";
+                    const link = location.href;
+                    return {
+                        id: noteId,
+                        title: title.slice(0, 160),
+                        thumb: thumb,
+                        loai: isVid ? 'video' : 'anh',
+                        video: isVid,
+                        so_anh: note.imageList ? note.imageList.length : 0,
+                        url: link,
+                        link: link,
+                        like: note.interactInfo ? String(note.interactInfo.likedCount || '') : '',
+                        time: note.time ? Math.floor(note.time / 1000) : 0,
+                        nick: nick,
+                        user_id: note.user ? note.user.userId : '',
+                        avatar: avatar
+                    };
+                }
+            }
+            return null;
+        }""")
+        
+        if not item:
+            # Fallback
+            doc_title = await self.page.title()
+            title = doc_title.replace(" - rednote", "").replace(" - 小红书", "").strip()
+            is_video = await self.page.evaluate("() => !!document.querySelector('video')")
+            thumb = await self.page.evaluate("""() => {
+                const v = document.querySelector('video');
+                if (v && v.getAttribute('poster')) return v.getAttribute('poster');
+                const img = document.querySelector('.media-container img, [class*="note"] img, img');
+                return img ? img.src : '';
+            }""")
+            import re
+            m = re.search(r"/(?:explore|discovery/item)/([0-9a-fA-F]+)|/user/profile/[0-9a-fA-F]+/([0-9a-fA-F]{16,})", url)
+            note_id = (m.group(1) or m.group(2)) if m else "note"
+            item = {
+                "id": note_id,
+                "title": title[:160],
+                "thumb": thumb,
+                "loai": "video" if is_video else "anh",
+                "video": is_video,
+                "so_anh": 0 if is_video else 1,
+                "url": url,
+                "link": url,
+                "like": "",
+                "time": 0,
+                "nick": "",
+                "user_id": "",
+                "avatar": ""
+            }
+        return item
+
+
     async def get_video_info(self, timeout_ms=8000):
         """[B] Bắt URL video/m3u8 qua network sau open_note (browser đã giải challenge → request đủ token).
         Chưa dùng ở Commit A — để sẵn cho phần tải."""
@@ -255,12 +332,28 @@ async def _run(args):
                     (tai if ok else loi).append(nid)
                 return {"ok": len(tai) > 0, "tai": tai, "loi": loi,
                         "msg": "Tải %d/%d video qua browser" % (len(tai), len(ids))}
-            await b.open_profile(args.url)
-            if await b.can_login():
-                return {"ok": False, "msg": "Phiên đăng nhập đã hết hạn — hãy ĐĂNG NHẬP LẠI nền tảng rồi thử lại."}
-            if args.action == "list":
-                items = await b.list_notes(max_count=int(args.count or 50))
-                return {"ok": True, "items": items, "tong": len(items)}
+            import re
+            is_note = False
+            if args.url:
+                if re.search(r"/(?:explore|discovery/item)/[0-9a-fA-F]+|/user/profile/[0-9a-fA-F]+/([0-9a-fA-F]{16,})", args.url):
+                    is_note = True
+
+            if is_note:
+                try:
+                    item = await b.get_single_note_info(args.url)
+                    if await b.can_login():
+                        return {"ok": False, "msg": "Phiên đăng nhập đã hết hạn — hãy ĐĂNG NHẬP LẠI nền tảng rồi thử lại."}
+                    items = [item] if item else []
+                    return {"ok": True, "items": items, "tong": len(items)}
+                except Exception as e:
+                    return {"ok": False, "msg": "Lỗi tải thông tin bài: " + str(e)[:200]}
+            else:
+                await b.open_profile(args.url)
+                if await b.can_login():
+                    return {"ok": False, "msg": "Phiên đăng nhập đã hết hạn — hãy ĐĂNG NHẬP LẠI nền tảng rồi thử lại."}
+                if args.action == "list":
+                    items = await b.list_notes(max_count=int(args.count or 50))
+                    return {"ok": True, "items": items, "tong": len(items)}
             return {"ok": False, "msg": "Hành động chưa hỗ trợ: " + str(args.action)}
     except Exception as e:
         return {"ok": False, "msg": "Lỗi mở trình duyệt: " + str(e)[:200]}

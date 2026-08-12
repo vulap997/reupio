@@ -777,3 +777,35 @@ Khóa mục = `[ngày] mô tả ngắn` (không có session-id ổn định nên
 - User render video Trung-học (nhiều chữ trên màn hình) → bị lật gương toàn bộ (tiêu đề/thoại đọc ngược) do "Lật ngang" mặc định BẬT.
 - **Fix:** bỏ `checked` 3 chỗ trong web/index.html: `xlMirror` (Render), `arMirror` (auto-render), `rdMirror` (modal). Giờ mặc định KHÔNG lật; ai cần né bản quyền tự tích. xlRestoreCfg KHÔNG khôi phục giá trị checkbox nên không override.
 - **Trạng thái:** ✅ XONG — user render lại (flip off) sẽ hết ngược.
+
+### ✅ [2026-07-31] Sửa lỗi Tách lời (giữ nhạc) & Tự động nâng cấp PyTorch GPU khi cài GPU
+- User: "hình như chế độ tách lời giữ nhạc nó đang bị lỗi đúng không, mình tích vào nhưng chạy thử không thấy nó tách..."
+- **Nguyên nhân**: Môi trường chạy thực tế của app (`reupio/runtime/venv`) mặc định cài bản PyTorch CPU-only do file `pyproject.toml` khóa ở index `pytorch-cpu`, dẫn đến thiếu thư viện `demucs` và không dùng được GPU NVIDIA cho tác vụ AI này.
+- **Sửa lỗi trực tiếp**: Đã cài đặt `demucs` và các dependencies vào venv thực tế của máy.
+- **Tương thích máy khách**: Cập nhật file [cai_gpu.py](file:///f:/27 tool sub video va reup/LLN tool/resources/app-src/cai_gpu.py) để khi người dùng chạy cài đặt tăng tốc GPU (click nút trong UI hoặc tự chạy), script sẽ tự động cài thêm gói CUDA cho PyTorch (`torch` + `torchaudio` từ whl/cu121). Đối với máy không có GPU (chạy CPU), PyTorch vẫn được giữ nguyên bản CPU-only siêu nhẹ.
+- **Trạng thái**: ✅ XONG.
+
+### 🟢 [2026-08-10] Bỏ stepper 5 bước, Ẩn panel Khóa AI & Đưa tiêu đề các trang lên thanh Header
+- **Việc:** 
+  1. Ẩn stepper 5 bước ở header.
+  2. Ẩn panel Khóa cho AI (API Keys) trong cài đặt.
+  3. Đưa tiêu đề (`h1.page`) của các tab hoạt động lên thanh Header (top bar) động thay vì hiển thị ở nội dung trang.
+- **File đụng:** [index.html](file:///f:/27%20tool%20sub%20video%20va%20reup/LLN%20tool/resources/app-src/web/index.html)
+- **Trạng thái:** ✅ XONG.
+
+### 🟢 [2026-08-10] Đổi tên menu Băm nhỏ -> Chia nhỏ, Quy trình -> Tự động
+- **Việc:** Đổi tên hiển thị trên thanh menu sidebar và tiêu đề trang tương ứng: Băm nhỏ -> Chia nhỏ, Quy trình -> Tự động.
+- **File đụng:** [index.html](file:///f:/27%20tool%20sub%20video%20va%20reup/LLN%20tool/resources/app-src/web/index.html)
+- **Trạng thái:** ✅ XONG.
+
+### 🟢 [2026-08-10] Fix lỗi tiêu đề trang biến mất khi đổi tab hoặc bấm lại menu nhiều lần
+- **Việc:** Sửa logic `syncTopTitle` trong `index.html`. Do tiêu đề bị di chuyển (move) sang container `#topTitle` nên ở các lần click sau `querySelector` không tìm thấy trong container của section nữa. Thêm thuộc tính `data-sect` để định danh và tra cứu lại tiêu đề đã di chuyển một cách an toàn.
+- **File đụng:** [index.html](file:///f:/27%20tool%20sub%20video%20va%20reup/LLN%20tool/resources/app-src/web/index.html)
+- **Trạng thái:** ✅ XONG.
+
+
+
+
+
+
+

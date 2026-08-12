@@ -198,9 +198,7 @@
   @media(max-width:1100px){.caorow{grid-template-columns:1fr}.cao-action{position:static}}
 
   /* Platform cards */
-  .plats{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
-  @media(max-width:1100px){.plats{grid-template-columns:repeat(5,1fr)}}
-  @media(max-width:560px){.plats{grid-template-columns:repeat(3,1fr)}}
+  .plats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:320px}
   .plat{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
         border:1px solid var(--glass-bd);border-radius:12px;padding:9px 4px;text-align:center;cursor:pointer;
         transition:.18s;position:relative;box-shadow:0 4px 16px rgba(0,0,0,.20)}
@@ -213,7 +211,7 @@
   .plat .pic img[alt="Bilibili"]{height:27px;border-radius:0}
   .plat .pic img[alt="Weibo"]{border-radius:0}
   /* TẠM KHOÁ nền tảng chưa hoàn thiện (Weibo/Twitter/Instagram/Reddit/Threads) — cập nhật ở bản sau. Bật lại = XOÁ dòng dưới. */
-  .plat[data-p="wb"],.plat[data-p="tw"],.plat[data-p="ig"],.plat[data-p="rd"],.plat[data-p="th"]{display:none}
+  .plat[data-p="wb"],.plat[data-p="tw"],.plat[data-p="ig"],.plat[data-p="rd"],.plat[data-p="th"],.plat[data-p="xhs"],.plat[data-p="rednote"],.plat[data-p="yt"],.plat[data-p="tt"],.plat[data-p="fb"]{display:none}
   .plat b{display:block;font-size:11px;line-height:1.2;word-break:break-word}
   .plat span{display:none}
   .plat .tick{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--grad);
@@ -438,8 +436,8 @@
   .fkw .r:first-child{border-top:0}
   .fkw .c{background:var(--card2);border-radius:6px;padding:1px 8px;font-size:11px;color:var(--muted)}
   /* Thẻ trạng thái đăng nhập nền tảng */
-  .lcards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
-  @media(max-width:980px){.lcards{grid-template-columns:repeat(3,1fr)}}
+  .lcards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px;max-width:720px}
+  @media(max-width:980px){.lcards{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:640px){.lcards{grid-template-columns:repeat(2,1fr)}}
   /* Thẻ login KIỂU MOCKUP: logo trái, tên + dòng trạng thái giữa, badge phải, nút full-width đáy */
   .lcard{display:grid;grid-template-columns:auto 1fr auto;
@@ -448,6 +446,7 @@
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-bd);
     border-radius:16px;padding:15px 16px;text-align:left;cursor:pointer;transition:.18s;position:relative;
     box-shadow:0 6px 20px rgba(0,0,0,.22)}
+  .lcard[data-p]:not([data-p="dy"]):not([data-p="bili"]){display:none !important}
   .lcard:hover{transform:translateY(-3px);border-color:rgba(214,161,42,.4);box-shadow:0 11px 28px rgba(214,161,42,.1)}
   .lcard img{grid-area:logo;height:36px;width:36px;object-fit:contain;border-radius:10px;flex-shrink:0}
   .lcard .lletter{grid-area:logo;height:36px;width:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
@@ -629,8 +628,8 @@
     /* grid bố cục nhiều cột → 1 cột */
     .bg-grid,.caorow,.caorow.full,.fpage,.row4,.rdr-ovr-grid,.fcard,.filters,.fgrid{grid-template-columns:1fr !important}
     /* lưới thẻ → tự xếp vừa màn (không nhồi cột nhỏ xíu) */
-    .lcards,.flist,.fmini{grid-template-columns:repeat(auto-fill,minmax(135px,1fr)) !important}
-    .plats{grid-template-columns:repeat(3,1fr) !important}
+    .flist,.fmini{grid-template-columns:repeat(auto-fill,minmax(135px,1fr)) !important}
+    .lcards,.plats{grid-template-columns:repeat(2,1fr) !important}
     .seg{max-width:none;flex-wrap:wrap}
     .kw-inp{min-width:0;width:100%}
     /* select/ô nhập trong hàng dài → không tràn */
@@ -639,9 +638,11 @@
   /* Điện thoại nhỏ */
   @media(max-width:480px){
     .content{padding:10px 9px}
-    .lcards,.flist,.fmini{grid-template-columns:repeat(auto-fill,minmax(110px,1fr)) !important}
-    .plats{grid-template-columns:repeat(2,1fr) !important}
+    .flist,.fmini{grid-template-columns:repeat(auto-fill,minmax(110px,1fr)) !important}
+    .lcards,.plats{grid-template-columns:repeat(2,1fr) !important}
   }
+  body:not(.dub-active) .dub-only { display: none !important; }
+  body:not(.lam-active) .lam-only { display: none !important; }
 </style>
 </head>
 <body>
@@ -670,16 +671,16 @@
   <aside class="side">
     <div class="brand"><img class="logo" src="logos/applogo.png" alt="ViralOS"><b>ViralOS</b></div>
     <nav class="nav" id="nav">
-      <a data-v="cao" class="active"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span> Cào ngay</a>
-      <a data-v="lichsu"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span> Lịch sử cào</a>
+      <a data-v="cao" class="active"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span> Tìm và tải video</a>
+      <a data-v="lichsu"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span> Lịch sử tìm</a>
       <a data-v="videomoi"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg></span> Theo dõi kênh</a>
       <a data-v="kenhnguon"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span> Kênh nguồn</a>
       <a data-v="files"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span> File đã tải</a>
       <a data-v="xuly"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 12h18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg></span> Render</a>
       <a data-v="darender"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M8 6l-1.2 4M13 6l-1.2 4M18 6l-1.2 4"/></svg></span> Đã render</a>
-      <a data-v="quytrinh"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.4"/><circle cx="6" cy="19" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M6 7.4v9.2M8.2 6.3 15.6 11M8.2 17.7 15.6 13"/></svg></span> Quy trình</a>
+      <a data-v="quytrinh"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.4"/><circle cx="6" cy="19" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M6 7.4v9.2M8.2 6.3 15.6 11M8.2 17.7 15.6 13"/></svg></span> Tự động</a>
       <a data-v="ai" style="display: none !important;"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/><path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span> Trợ lý AI</a>
-      <a data-v="bam"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.5 15.5M14.5 14.5 20 20M8.5 8.5 11 11"/></svg></span> Băm nhỏ</a>
+      <a data-v="bam"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.5 15.5M14.5 14.5 20 20M8.5 8.5 11 11"/></svg></span> Chia nhỏ</a>
       <a data-v="caidat"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-1-1.4 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.4-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 1 1.4 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg></span> Cài đặt</a>
       <a data-v="banggia"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 7v5l9 9 7-7-9-9H3z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span> Bảng Giá</a>
       <a data-v="goi"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M9 6v12"/></svg></span> Gói của tôi</a>
@@ -695,17 +696,18 @@
   <div class="main">
     <div class="top">
       <div class="t">
-        <div class="wiz" id="wiz">
+        <div class="wiz" id="wiz" style="display: none !important;">
           <button class="ws" data-step="1" onclick="wizGo(1)" title="Đăng nhập nền tảng"><span class="wn">1</span><span class="wt">Đăng nhập</span></button>
           <span class="wsep"></span>
           <button class="ws" data-step="2" onclick="wizGo(2)" title="Chọn nền tảng cào"><span class="wn">2</span><span class="wt">Chọn nền tảng</span></button>
           <span class="wsep"></span>
-          <button class="ws" data-step="3" onclick="wizGo(3)" title="Cào video"><span class="wn">3</span><span class="wt">Cào video</span></button>
+          <button class="ws" data-step="3" onclick="wizGo(3)" title="Tải video"><span class="wn">3</span><span class="wt">Tải video</span></button>
           <span class="wsep"></span>
           <button class="ws" data-step="4" onclick="wizGo(4)" title="Xem trước & chọn file đã tải"><span class="wn">4</span><span class="wt">Xem trước</span></button>
           <span class="wsep"></span>
-          <button class="ws" data-step="5" onclick="wizGo(5)" title="Render & Đăng bài"><span class="wn">5</span><span class="wt">Render &amp; Đăng</span></button>
+          <button class="ws" data-step="5" onclick="wizGo(5)" title="Render"><span class="wn">5</span><span class="wt">Render</span></button>
         </div>
+        <div id="topTitle"></div>
       </div>
       <div class="r">
         <div class="chip">🟢 <span id="runState">Sẵn sàng</span></div>
@@ -741,14 +743,14 @@
       <!-- ===== CÀO NGAY ===== -->
       <section id="v-cao">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <h1 class="page" style="margin:0">⚡ Cào ngay<span class="help" data-tip="Tải video về máy.&#10;1. Chọn nền tảng (Douyin / Bilibili / Xiaohongshu / Weibo).&#10;2. Chọn cách cào: Theo từ khóa, Theo link, hoặc Theo kênh.&#10;3. Nhập nội dung rồi bấm BẮT ĐẦU CÀO.&#10;Video tải xong xem ở tab 'File đã tải'.">?</span></h1>
+          <h1 class="page" style="margin:0">⚡ Tìm và tải video<span class="help" data-tip="Tải video về máy.&#10;1. Chọn nền tảng (Douyin / Bilibili / Xiaohongshu / Weibo).&#10;2. Chọn cách cào: Theo từ khóa, Theo link, hoặc Theo kênh.&#10;3. Nhập nội dung rồi bấm BẮT ĐẦU CÀO.&#10;Video tải xong xem ở tab 'File đã tải'.">?</span></h1>
           <label class="sub" style="display:flex;align-items:center;gap:6px;margin:0">📅 Ngày
             <select id="caoDate" class="num" style="width:auto;padding:5px 8px" onchange="caoApplyDate()">
               <option value="">Tất cả</option>
             </select>
           </label>
         </div>
-        <div class="sub">Chọn nền tảng và thiết lập thông tin để bắt đầu cào video.</div>
+        <div class="sub">Chọn nền tảng và thiết lập thông tin để bắt đầu tải video.</div>
 
         <div class="stats">
           <div class="stat"><div class="ic" style="background:rgba(255,45,85,.15)">📹</div>
@@ -861,7 +863,7 @@
           <div id="fldKhongTrung" style="display:none;margin-top:8px">
             <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
               <input type="checkbox" id="caoKhongTrung" style="width:16px;height:16px">
-              <span>🆕 <b>Cào không trùng</b> — đào sâu tới khi đủ số video <b>chưa tải</b> (bỏ qua video đã tải, đào trang sâu hơn). <span style="color:#888">Douyin · Bilibili (tìm kiếm) · cào lâu hơn. YouTube/TikTok tự bỏ trùng sẵn.</span></span>
+              <span>🆕 <b>Bỏ qua video đã tải (không trùng)</b> — đào sâu tới khi đủ số video <b>chưa tải</b> (bỏ qua video đã tải, đào trang sâu hơn). <span style="color:#888">Douyin · Bilibili (tìm kiếm) · tải lâu hơn. YouTube/TikTok tự bỏ trùng sẵn.</span></span>
             </label>
           </div>
 
@@ -878,10 +880,10 @@
 
         <div class="caoright" id="caoRight">
           <div class="panel cao-action">
-            <button class="btn go big b2" id="xemBtn" onclick="xemTruoc()" title="Tìm & xem trước danh sách video (theo từ khóa hoặc kênh) rồi tick chọn bài muốn tải — khỏi cào mù"><span>👁 Xem trước &amp; chọn</span><span class="bsub">Xem danh sách video trước khi render</span></button>
-            <button class="btn ghost b2" id="crawlBtn" onclick="startCrawl()" style="margin-top:10px" title="Tải HẾT theo từ khóa/kênh, KHÔNG xem trước"><span>🚀 Cào hết (không xem)</span><span class="bsub">Tải hết theo từ khóa/kênh, không xem trước</span></button>
-            <button class="btn ghost b2" id="taskAddBtn" onclick="addToQueue()" style="margin-top:10px" title="Xếp job cào này vào HÀNG ĐỢI (chạy tuần tự) — bấm nhiều job rồi đi ngủ, khỏi ngồi canh"><span>📋 Thêm vào hàng đợi</span><span class="bsub">Xếp nhiều job cào, chạy lần lượt tự động</span></button>
-            <button class="btn ghost b2" onclick="stopCrawl()" style="margin-top:10px"><span>■ Dừng tất cả</span><span class="bsub">Dừng cào đang chạy</span></button>
+            <button class="btn go big b2" id="xemBtn" onclick="xemTruoc()" title="Tìm & xem trước danh sách video (theo từ khóa hoặc kênh) rồi tick chọn bài muốn tải — khỏi tải mò"><span>👁 Xem trước &amp; chọn</span><span class="bsub">Xem danh sách video trước khi tải</span></button>
+            <button class="btn ghost b2" id="crawlBtn" onclick="startCrawl()" style="margin-top:10px" title="Tải HẾT theo từ khóa/kênh, KHÔNG xem trước"><span>🚀 Tải hết (không xem)</span><span class="bsub">Tải hết theo từ khóa/kênh, không xem trước</span></button>
+            <button class="btn ghost b2" id="taskAddBtn" onclick="addToQueue()" style="margin-top:10px" title="Xếp job tải này vào HÀNG ĐỢI (chạy tuần tự) — bấm nhiều job rồi đi ngủ, khỏi ngồi canh"><span>📋 Thêm vào hàng đợi</span><span class="bsub">Xếp nhiều job tải, chạy lần lượt tự động</span></button>
+            <button class="btn ghost b2" onclick="stopCrawl()" style="margin-top:10px"><span>■ Dừng tất cả</span><span class="bsub">Dừng tải đang chạy</span></button>
           </div>
           <!-- Thẻ Tiến trình: card RIÊNG, LUÔN hiện (trạng thái chờ khi rảnh) như mockup -->
           <div class="panel cao-prog" id="caoProgWrap">
@@ -902,7 +904,7 @@
           <!-- HÀNG ĐỢI TẢI (Task Queue) — xếp nhiều job cào, chạy tuần tự; poll /api/task/list -->
           <div class="panel" id="tqWrap" style="margin-top:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <b style="font-size:14px">📋 Hàng đợi tải</b>
+              <b style="font-size:14px">📋 Hàng đợi &amp; Tiến trình</b>
               <span id="tqDem" style="color:var(--muted);font-size:12px">—</span>
             </div>
             <div id="tqList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow:auto"></div>
@@ -1052,34 +1054,29 @@
       <!-- ===== RENDER ===== -->
       <section id="v-xuly" class="hidden">
         <style>
-        /* ===== Render: Video nguồn (trái, luôn hiện) + panel cấu hình chia tab Edit/Lồng tiếng (phải). Màu xanh-tím. ===== */
+        /* ===== Render: Video nguồn (trái) + Cấu hình (giữa + phải). Màu xanh-tím. ===== */
         #v-xuly{padding:16px 20px;overflow-y:auto}
         .vd-head{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:12px}
         .vd-head h1{font-size:20px;margin:0;font-weight:800}
         .vd-ovr-mini{font-size:12px;color:var(--muted);white-space:nowrap}
         .vd-ovr-mini b{color:var(--text)}
         .vd-run-btn{margin-left:auto;border:0;border-radius:11px;height:42px;padding:0 22px;font-weight:800;font-size:14px;color:#000;cursor:pointer;background:var(--grad);box-shadow:0 6px 18px rgba(214,161,42,.3)}
-        .vd-cols2{display:grid;grid-template-columns:1.05fr 1fr;gap:16px;align-items:start}
-        @media(max-width:1100px){.vd-cols2{grid-template-columns:1fr}}
+        .vd-cols3{display:grid;grid-template-columns:320px 1.15fr 1.15fr;gap:16px;align-items:start;transition:all 0.2s ease}
+        @media(max-width:1250px){.vd-cols3{grid-template-columns:300px 1fr 1fr}}
+        @media(max-width:980px){.vd-cols3{grid-template-columns:1fr}}
         .vd-card{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}
         .vd-ch{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
         .vd-ch h3{font-size:14px;font-weight:700;margin:0}
         .vd-cb{padding:14px}
-        .vd-tabhead{display:flex;align-items:center;gap:5px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card2)}
-        .vd-tab{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;cursor:pointer}
-        .vd-tab.on{background:var(--grad);color:#000;box-shadow:0 4px 13px rgba(214,161,42,.2)}
-        .vd-panel{display:none} .vd-panel.on{display:block}
-        /* hàng nút/ô (Video nguồn) */
+
         .vd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
         .vd-row:last-child{margin-bottom:0}
         .vd-row > .num{flex:1;min-width:120px}
         .vd-row > .chip-add{flex:0 0 auto;white-space:nowrap}
-        /* nhóm checkbox (ngang, căn giữa) */
         .vd-checks{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:13px}
         .vd-checks:last-child{margin-bottom:0}
         .vd-chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;white-space:nowrap;margin:0}
         .vd-chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
-        /* lưới field có nhãn (đều cột, nhãn thẳng hàng) */
         .vd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;margin-bottom:13px}
         .vd-grid:last-child{margin-bottom:0}
         .vd-f{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -1094,12 +1091,10 @@
         .vd-rule input{accent-color:var(--accent);width:16px;height:16px}
         .vd-save{display:flex;gap:4px;align-items:center}
         .vd-save .num{flex:1;min-width:0}
-        /* hàng đợi (trong tab Edit) */
-        .vd-queue{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+        .vd-queue{margin-top:0}
         .vd-queue .qh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap}
-        #v-xuly #qList{max-height:200px;overflow:auto}
+        #v-xuly #qList{max-height:260px;overflow:auto}
         #v-xuly select.num,#v-xuly input.num{padding:7px 9px;font-size:13px}
-        /* ===== Bảng "Ngôn ngữ đầu ra" (voice-per-language) ===== */
         .xl-ltable{width:100%;border-collapse:collapse;font-size:13px}
         .xl-ltable th{text-align:left;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:7px 9px;border-bottom:1px solid var(--line)}
         .xl-ltable td{padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -1115,13 +1110,12 @@
         .xl-ltable .xl-langhear{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:13px}
         .xl-ltable .xl-langhear:hover{border-color:var(--acc,#7c5cff);color:var(--text)}
         .xl-status .rd{color:#57d9a3;font-weight:600;font-size:12px} .xl-status .off{color:var(--muted);font-size:12px}
-        .xl-langnote{display:none;align-items:flex-start;gap:9px;margin-top:9px;padding:9px 12px;border-radius:10px;background:rgba(214,161,42,.09);border:1px solid rgba(214,161,42,.25);font-size:11.5px;line-height:1.45;color:var(--text)}
+        .xl-langnote{display:flex;align-items:flex-start;gap:9px;margin-top:9px;padding:9px 12px;border-radius:10px;background:rgba(214,161,42,.09);border:1px solid rgba(214,161,42,.25);font-size:11.5px;line-height:1.45;color:var(--text)}
         .xl-langnote b{color:#c4b5ff}
-        /* ===== Panel Video nguồn GỌN (chỉ video đã chọn) + nút mở modal ===== */
         .xl-pickbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:12px;border-radius:12px;cursor:pointer;font-weight:800;font-size:14px;color:#000;border:0;background:var(--grad);box-shadow:0 6px 18px rgba(214,161,42,.2)}
         .xl-pickbtn:hover{filter:brightness(1.08)}
         .xl-pickbtn .ic{font-size:16px}
-        .xl-chosen{margin-top:13px;display:flex;flex-direction:column;gap:8px;max-height:min(52vh,460px);overflow:auto;padding-right:3px}
+        .xl-chosen{margin-top:13px;display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;padding-right:3px}
         .xl-crow{display:flex;align-items:center;gap:11px;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:7px 8px}
         .xl-cthumb{width:58px;height:40px;border-radius:8px;flex:none;background:#000;overflow:hidden}
         .xl-cthumb video{width:100%;height:100%;object-fit:cover;display:block}
@@ -1134,7 +1128,6 @@
         .xl-chfoot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;font-size:11.5px}
         .xl-chfoot a{color:var(--accent2,#38bdf8);cursor:pointer;text-decoration:none}
         .xl-chfoot a:hover{text-decoration:underline}
-        /* ===== Modal chọn video (duyệt/lọc rộng) ===== */
         .xl-backdrop{position:fixed;inset:0;background:rgba(3,4,10,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:99999;padding:22px}
         .xl-backdrop.on{display:flex}
         .xl-modal{width:min(1160px,96vw);height:min(88vh,880px);background:var(--bg2,#111325);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
@@ -1159,7 +1152,6 @@
         .xl-ghost{padding:11px 18px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:13px}
         .xl-ghost:hover{color:var(--text);border-color:var(--muted)}
         @media(max-width:720px){.xl-modal{width:96vw;height:92vh}}
-        /* ===== Tab Lồng tiếng — header + toggle + mini-card (giống mockup Output Languages) ===== */
         .xl-sect-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
         .xl-sect-h h4{margin:0;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
         .xl-sect-h small{color:var(--muted);font-weight:400;font-size:11px}
@@ -1182,209 +1174,262 @@
         .xl-mhint{font-size:10.5px;color:var(--muted);line-height:1.5;margin:8px 0 0}
         .xl-chk2{display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;margin-top:10px}
         .xl-slider2{width:100%;accent-color:var(--accent);margin-top:12px}
+        
+        /* Chống lỗi hiển thị layout lồng khi bị mượn ra khỏi .vd-cols3 */
+        .vd-cols3 #xlCfgCard { display: contents; }
+        #xlCfgCard { display: flex; flex-direction: column; gap: 16px; border: none; background: transparent; }
         </style>
 
         <!-- HEADER -->
-        <div class="vd-head">
-          <h1 class="page">🎬 Render</h1>
-          <span id="xlGpu" class="sub" style="margin:0;font-size:12px;display:none;white-space:nowrap"></span>
-          <span class="vd-ovr-mini"><b id="rdStatSel">0</b> video · <b id="rdStatTime">0 phút</b> · <b id="rdStatSize">0 MB</b></span>
-          <button class="vd-run-btn" id="xlRunBtn" onclick="xlRun()">🚀 Render</button>
+        <div class="vd-head" style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;">
+          <div>
+            <h1 class="page" style="display:inline-flex; align-items:center; gap:8px;">🎬 Render</h1>
+            <span id="xlGpu" class="sub" style="margin:0 0 0 10px; font-size:12px; font-weight:700; color:var(--ok); display:none; white-space:nowrap;"></span>
+            <span class="vd-ovr-mini" style="margin-left:12px;"><b id="rdStatSel">0</b> video · <b id="rdStatTime">0 phút</b> · <b id="rdStatSize">0 MB</b></span>
+          </div>
+          <button class="vd-run-btn" id="xlRunBtn" onclick="xlRun()">🚀 Render ngay</button>
         </div>
         <div id="xlWarn" style="color:var(--warn);font-size:12px;margin:-4px 0 10px;min-height:0"></div>
 
-        <div class="vd-cols2">
+        <!-- HEADER BUTTONS -->
+        <div style="display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--line); padding-bottom:12px;">
+          <span class="sub" style="margin:0; font-size:13px; color:var(--muted)">Nhập link/từ khóa ở tab <b>Tìm và tải video</b>, sau đó thiết lập cấu hình dưới đây và bấm <b>Render ngay</b>.</span>
+          <button class="chip-add" style="margin-left:auto;font-size:11.5px; padding: 6px 12px;" onclick="xlPreview5s()" title="Preview 5s: bố cục che chữ + chỗ phụ đề + logo + watermark">👁 Preview 5s</button>
+        </div>
 
-          <!-- ===== TRÁI: VIDEO NGUỒN (GỌN — chỉ video ĐÃ CHỌN; duyệt/lọc dồn vào modal "Chọn video") ===== -->
-          <div class="vd-card">
-            <div class="vd-ch"><h3>Video nguồn</h3><span class="sel-count" id="xlPicked"></span></div>
-            <div class="vd-cb">
-              <button type="button" class="xl-pickbtn" onclick="xlOpenPicker()"><span class="ic">➕</span> Chọn video</button>
-              <div id="xlChosen" class="xl-chosen"></div>
-              <div class="xl-chfoot" id="xlChosenFoot" style="display:none">
-                <span class="sub" style="margin:0" id="xlChosenCnt"></span>
-                <a onclick="xlClearSel()">Bỏ chọn tất cả</a>
+        <div class="vd-cols3" id="vdCols">
+
+          <!-- ===== CỘT 1 (TRÁI): Video nguồn + Hàng đợi render ===== -->
+          <div class="vd-col-left" style="display:flex; flex-direction:column; gap:16px;">
+            <!-- Video nguồn -->
+            <div class="vd-card">
+              <div class="vd-ch"><h3>Video nguồn</h3><span class="sel-count" id="xlPicked"></span></div>
+              <div class="vd-cb">
+                <button type="button" class="xl-pickbtn" onclick="xlOpenPicker()"><span class="ic">➕</span> Chọn video</button>
+                <div id="xlChosen" class="xl-chosen"></div>
+                <div class="xl-chfoot" id="xlChosenFoot" style="display:none">
+                  <span class="sub" style="margin:0" id="xlChosenCnt"></span>
+                  <a onclick="xlClearSel()">Bỏ chọn tất cả</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hàng đợi render -->
+            <div class="vd-card">
+              <div class="vd-ch" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0">📥 Hàng đợi Render <span id="qCount" class="rdr-q-num" style="color:var(--accent); font-weight:700"></span></h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="chip-add" onclick="autoOpen()" title="Tự động đưa video gốc CHƯA render vào hàng đợi rồi xử lý hàng loạt" style="font-size:11px">🤖 Tự động</button>
+                </div>
+              </div>
+              <div class="vd-cb">
+                <div id="autoStatus" class="sub" style="margin:0 0 8px;display:none"></div>
+                <div id="qList" class="rdr-q-list" style="max-height: 380px; overflow-y: auto;"></div>
+                <div style="text-align:right; margin-top:10px;">
+                  <a class="rdr-q-clear" onclick="qClear()" style="cursor:pointer; font-size:12px; color:var(--muted)">Xóa tất cả</a>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- ===== PHẢI: PANEL CẤU HÌNH (chia 2 tab) — MƯỢN sang tab Quy trình (block Render), trả về đây khi rời ===== -->
+          <!-- ===== PANEL CẤU HÌNH (GỘP các tab) — MƯỢN sang tab Quy trình (block Render), trả về đây khi rời ===== -->
           <span id="xlCfgHome"></span>
-          <div class="vd-card" id="xlCfgCard">
-            <div class="vd-tabhead">
-              <button class="vd-tab on" id="vdT1" onclick="vdTab(1)">✂️ Edit</button>
-              <button class="vd-tab" id="vdT2" onclick="vdTab(2)">🎙 Lồng tiếng</button>
-              <button class="chip-add" style="margin-left:auto;font-size:11.5px" onclick="xlPreview5s()" title="Preview 5s: bố cục che chữ + chỗ phụ đề + logo + watermark">👁 Preview 5s</button>
-            </div>
-            <div class="vd-cb">
-
-              <!-- ===== TAB EDIT ===== -->
-              <div class="vd-panel on" id="vdCol1">
-                <div class="vd-checks">
-                  <label class="vd-chk"><input type="checkbox" id="xlMirror"> Lật ngang</label>
-                  <label class="vd-chk"><input type="checkbox" id="xlColor" checked> Chỉnh màu</label>
-                  <label class="vd-chk"><input type="checkbox" id="xlSpeedOn" checked> Tốc độ
-                    <select id="xlSpeed" class="num" style="width:auto;padding:3px 5px">
-                      <option value="0.8">0.8x</option><option value="0.85">0.85x</option><option value="0.9">0.9x</option>
-                      <option value="1.0" selected>1.0x</option><option value="1.05">1.05x</option><option value="1.1">1.1x</option>
-                      <option value="1.15">1.15x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option>
-                    </select></label>
-                  <label class="vd-chk" title="Phóng to khung: cắt bớt mép + đổi khung (chống bản quyền), giữ độ phân giải"><input type="checkbox" id="xlZoomOn"> Phóng to
-                    <select id="xlZoom" class="num" style="width:auto;padding:3px 5px">
-                      <option value="1.05">105%</option><option value="1.1" selected>110%</option><option value="1.15">115%</option>
-                      <option value="1.2">120%</option><option value="1.3">130%</option><option value="1.5">150%</option>
-                    </select></label>
-                </div>
-                <div class="vd-grid">
-                  <div class="vd-f"><div class="vd-lbl">Cắt đầu (giây)</div><input class="num" id="xlTrimS" type="number" min="0" max="600" value="0"></div>
-                  <div class="vd-f"><div class="vd-lbl">Cắt cuối (giây)</div><input class="num" id="xlTrimE" type="number" min="0" max="600" value="0"></div>
-                  <div class="vd-f"><div class="vd-lbl">Tỉ lệ khung</div>
-                    <select id="xlRatio" class="num"><option value="">Giữ nguyên</option><option value="9:16">Dọc 9:16</option><option value="16:9">Ngang 16:9</option></select></div>
-                </div>
-                <div class="vd-checks">
-                  <label class="vd-chk" title="Đóng dấu CHỮ lên video"><input type="checkbox" id="xlWm"> Watermark</label>
-                  <label class="vd-chk" title="Chèn LOGO lên video"><input type="checkbox" id="xlLogo"> Logo</label>
-                  <label class="vd-chk" title="Tick = chữ CHẠY quanh khung; bỏ = đứng góc"><input type="checkbox" id="xlWmChay" onchange="xlBrandSave()"> chữ chạy</label>
-                </div>
-                <div class="vd-grid">
-                  <div class="vd-f"><div class="vd-lbl">Chữ watermark</div><input class="num" id="xlWmText" placeholder="vd @kênh" oninput="xlBrandSave()"></div>
-                  <div class="vd-f"><div class="vd-lbl">Logo</div>
-                    <div class="vd-save">
-                      <input type="file" id="xlLogoUp" accept="image/*" style="display:none" onchange="xlLogoUpload(this)">
-                      <button type="button" class="chip-add" style="font-size:11px" onclick="document.getElementById('xlLogoUp').click()">📤 Tải</button>
-                      <span class="sub" id="xlLogoName" style="font-size:11px;opacity:.8">chưa có</span>
-                      <button type="button" class="chip-add" id="xlLogoClr" style="font-size:11px;display:none" onclick="xlLogoClear()">✕</button>
-                    </div>
-                  </div>
-                  <div class="vd-f wide"><div class="vd-lbl">📂 Thư mục lưu (trống = cạnh video gốc)</div>
-                    <div class="vd-save">
-                      <input class="num" id="xlOut" readonly placeholder="cạnh video gốc">
-                      <button class="chip-add" onclick="chonThuMuc(document.getElementById('xlOut').value,p=>{document.getElementById('xlOut').value=p;xlBrandSave();})" title="Chọn thư mục">…</button>
-                      <button class="chip-add" onclick="document.getElementById('xlOut').value='';xlBrandSave()" title="Xóa">✕</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="sub" id="xlEdInfo" style="display:none"></div>
-
-                <!-- HÀNG ĐỢI + NHẬT KÝ (trong tab Edit) -->
-                <div class="vd-queue">
-                  <div class="qh">
-                    <span class="rdr-q-title">📥 Hàng đợi Render <span id="qCount" class="rdr-q-num"></span></span>
-                    <div style="display:flex;gap:8px;align-items:center">
-                      <button class="chip-add" onclick="autoOpen()" title="Tự động đưa video gốc CHƯA render vào hàng đợi rồi xử lý hàng loạt">🤖 Tự động render</button>
-                      <a class="rdr-q-clear" onclick="qClear()" style="cursor:pointer">Xóa tất cả</a>
-                    </div>
-                  </div>
-                  <div id="autoStatus" class="sub" style="margin:0 0 8px;display:none"></div>
-                  <div id="qList" class="rdr-q-list"></div>
-                </div>
-              </div>
-
-              <!-- ===== TAB LỒNG TIẾNG ===== -->
-              <div class="vd-panel" id="vdCol2">
-                <!-- Header + toggle "Bật lồng tiếng" (giống mockup Output Languages) -->
-                <div class="xl-sect-h">
-                  <h4>🌐 Ngôn ngữ đầu ra <small>(Output Languages)</small></h4>
+          <div id="xlCfgCard" style="display:contents;">
+            
+            <!-- ===== CỘT 2 (GIỮA): Ngôn ngữ đầu ra + Tăng tốc GPU ===== -->
+            <div class="vd-col-middle" id="vdColMiddleContainer" style="flex:1.15; min-width:320px; display:flex; flex-direction:column; gap:16px;">
+              <!-- Ngôn ngữ đầu ra -->
+              <div class="vd-card" id="vdColMiddle" style="width:100%;">
+                <div class="vd-ch" style="display:flex; justify-content:space-between; align-items:center;">
+                  <h3 style="margin:0">🌐 Ngôn ngữ đầu ra</h3>
                   <label class="xl-switch" title="Bật = LỒNG TIẾNG các ngôn ngữ đã tick; tắt = chỉ phụ đề (khi bật 'Tạo phụ đề')">
-                    <span class="xl-switch-lbl">Bật lồng tiếng</span>
+                    <span class="xl-switch-lbl" style="font-size:12px; margin-right:6px;">Bật lồng tiếng</span>
                     <input type="checkbox" id="xlDub" onchange="xlDubMain()"><span class="xl-slider"></span>
                   </label>
                 </div>
-
-                <div class="xl-lrow">
-                  <input id="xlLangSearch" oninput="_fillLangBatch()" placeholder="🔍 Tìm ngôn ngữ… (vd: nhật, malay, ả rập)" autocomplete="off" class="xl-lsearch">
-                </div>
-
-                <div class="vd-f" id="xlLangBatchWrap" title="Mỗi ngôn ngữ tick = 1 video output riêng (giọng + engine riêng theo ngôn ngữ). Video gốc giữ nguyên.">
-                  <div id="xlLangBatch" style="max-height:340px;overflow-y:auto;padding-right:3px"></div>
-                  <span class="sub" id="xlLangBatchInfo" style="display:none"></span>
-                </div>
-                <div class="xl-lfoot"><span id="xlLangFoot">Đã chọn <b>0</b> / 74 ngôn ngữ</span></div>
-                <div id="xlLangNote" class="xl-langnote">🌐&nbsp;<span><b>Mỗi ngôn ngữ = 1 video riêng.</b> Chọn giọng cho từng ngôn ngữ ở cột <b>Giọng</b>; engine tự hợp lý (offline/online) theo ngôn ngữ. Video gốc được giữ nguyên.</span></div>
-
-                <div id="xlVoiceWrap" style="display:none;flex-direction:column;gap:8px;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card2);margin-bottom:12px">
-                  <div style="font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:6px">🎤 Giọng mẫu nhân bản (Clone giọng)</div>
-                  <div style="display:flex;gap:8px;margin-top:6px">
-                    <select id="xlGiong" class="num" style="padding:7px 9px;flex:1"></select>
-                    <button class="chip-add" type="button" style="padding:7px 12px;font-size:12.5px;white-space:nowrap" onclick="document.getElementById('xlRefFile').click()">📁 Tải giọng mẫu</button>
+                <div class="vd-cb">
+                  <div class="xl-lrow" style="margin-bottom:10px;">
+                    <input id="xlLangSearch" oninput="_fillLangBatch()" placeholder="🔍 Tìm ngôn ngữ… (vd: nhật, malay, ả rập)" autocomplete="off" class="xl-lsearch" style="width:100%;">
                   </div>
-                  <input type="file" id="xlRefFile" accept="audio/*" style="display:none" onchange="xlUploadRef(this)">
-                  <span class="sub" id="xlGiongMsg" style="margin:0;font-size:11px"></span>
-                </div>
-
-                <!-- 4 mini-card thiết lập lồng tiếng -->
-                <div class="xl-minirow">
-                  <div class="xl-mini" title="Lấy lời thoại gốc: OCR đọc chữ phụ đề cứng (chính xác nhất, chỉ video có hardsub — không có tự lùi ASR); ASR nghe tiếng nhận dạng.">
-                    <span class="xl-mlbl">🎙 Lấy lời thoại</span>
-                    <select id="xlLoiThoai" class="num" style="width:100%;margin-top:7px">
-                      <option value="ocr" selected>Đọc từ sub (OCR)</option>
-                      <option value="whisper">Giọng nói (ASR)</option>
-                    </select>
-                    <p class="xl-mhint">OCR = chữ trên video (chính xác nhất).</p>
+                  <div class="vd-f" id="xlLangBatchWrap" title="Mỗi ngôn ngữ tick = 1 video output riêng (giọng + engine riêng theo ngôn ngữ). Video gốc giữ nguyên.">
+                    <div id="xlLangBatch" style="max-height:340px;overflow-y:auto;padding-right:3px"></div>
+                    <span class="sub" id="xlLangBatchInfo" style="display:none"></span>
                   </div>
-                  <div class="xl-mini" title="0% = tắt tiếng gốc (chỉ giọng dịch); cao hơn = giữ tiếng gốc to hơn">
-                    <span class="xl-mlbl">🔉 Âm lượng gốc <b id="xlGocVolPct">20%</b></span>
-                    <input type="range" id="xlGocVol" min="0" max="100" value="20" class="xl-slider2" oninput="document.getElementById('xlGocVolPct').textContent=this.value+'%'">
-                    <p class="xl-mhint">0% = chỉ giọng dịch.</p>
+                  <div class="xl-lfoot" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12px; color:var(--muted)">
+                    <span id="xlLangFoot">Đã chọn <b>0</b> / 74 ngôn ngữ</span>
+                    <button type="button" class="chip-add" onclick="xlClearAllLangs()" style="font-size:11px; padding:3px 8px;">Bỏ chọn tất cả</button>
                   </div>
-                  <div class="xl-mini">
-                    <span class="xl-mlbl">Tùy chọn</span>
-                    <label class="xl-chk2" title="Tách nhạc gốc bằng AI, đặt giọng dịch lên trên — giữ nhạc nền"><input type="checkbox" id="xlTachNhac"> Tách lời (giữ nhạc)</label>
-                    <label class="xl-chk2"><input type="checkbox" id="xlPhude" onchange="xlUpd()"> Tạo phụ đề</label>
-                    <div id="xlPhudeStyleWrap" style="display:none; margin: 4px 0 8px 18px; font-size:12px;">
-                      <span class="sub" style="margin-right:6px">Giao diện caption:</span>
-                      <select id="xlPhudeStyle" class="num" style="padding:2px 6px; border-radius:4px; font-size:11px; background:var(--bg); border:1px solid var(--line); color:var(--fg)" onchange="xlUpd()">
-                        <option value="default" selected>Chữ trắng viền đen (Nền mờ)</option>
-                        <option value="black_on_white">Chữ đen khung trắng</option>
-                        <option value="black_on_yellow">Chữ đen khung vàng</option>
-                        <option value="white_on_yellow_black">Chữ trắng khung vàng viền đen</option>
-                        <option value="white_on_black">Chữ trắng khung đen</option>
-                      </select>
+                  <div id="xlLangNote" class="xl-langnote" style="margin-top:10px;">🌐&nbsp;<span><b>Mỗi ngôn ngữ = 1 video riêng.</b> Chọn giọng cho từng ngôn ngữ ở cột <b>Giọng</b>; engine tự hợp lý (offline/online) theo ngôn ngữ. Video gốc được giữ nguyên.</span></div>
+                  
+                  <!-- Clone voice wrap -->
+                  <div id="xlVoiceWrap" style="display:none;flex-direction:column;gap:8px;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card2)">
+                    <div style="font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:6px">🎤 Giọng mẫu nhân bản (Clone giọng)</div>
+                    <div style="display:flex;gap:8px;margin-top:6px">
+                      <select id="xlGiong" class="num" style="padding:7px 9px;flex:1"></select>
+                      <button class="chip-add" type="button" style="padding:7px 12px;font-size:12.5px;white-space:nowrap" onclick="document.getElementById('xlRefFile').click()">📁 Tải giọng mẫu</button>
                     </div>
-                    <label class="xl-chk2" title="Che dải chữ Trung gốc (tự dò OCR khi render)"><input type="checkbox" id="xlChe" checked> Che chữ Trung (Phụ đề chính)</label>
-                    <label class="xl-chk2" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú hiện 3s-5s)"><input type="checkbox" id="xlCheKhac"> Che chữ Trung khác (Chú thích/Tiêu đề tạm thời)</label>
-                  </div>
-                  <div class="xl-mini">
-                    <span class="xl-mlbl">✍️ Viết lại phong cách <span class="help" data-tip="CHỈ dùng cho video ĐÃ REVIEW sẵn (đã có lời kể/thuyết minh) mà bạn muốn ĐỔI CÁCH DIỄN ĐẠT.&#10;Giữ nguyên ý + tình tiết + timeline, chỉ viết lại giọng kể cho khác đi.&#10;⚠️ KHÔNG dùng cho video GỐC chưa review.">?</span></span>
-                    <div id="pcChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
-                    <p class="xl-mhint">Chỉ cho video ĐÃ review (có lời kể).</p>
+                    <input type="file" id="xlRefFile" accept="audio/*" style="display:none" onchange="xlUploadRef(this)">
+                    <span class="sub" id="xlGiongMsg" style="margin:0;font-size:11px"></span>
                   </div>
                 </div>
+              </div>
 
-                <!-- LEGACY: lồng-tiếng-ĐƠN (ẩn — bảng ngôn ngữ ở trên thay thế; GIỮ trong DOM cho JS + backend _xlBuildOpts) -->
-                <div id="xlSingleLegacy" style="display:none">
-                  <div class="vd-grid" style="margin-bottom:6px">
-                    <div class="vd-f">
-                      <div class="vd-lbl">Giọng đọc</div>
-                      <select id="xlTts" class="num" onchange="xlUpd()">
-                        <option value="piper" selected>ViralVoice — Tiêu chuẩn (nhanh)</option>
-                        <option value="omnivoice">ViralVoice — Clone giọng (cần GPU)</option>
-                        <option value="edge">ViralVoice — Online</option>
-                      </select>
-                    </div>
-                    <div class="vd-f" id="xlPiperWrap">
-                      <div class="vd-lbl">Giọng</div>
-                      <select id="xlPiperVoice" class="num"></select>
-                    </div>
+              <!-- Tăng tốc GPU (nâng cao) -->
+              <div class="vd-card" id="xlGpuCard" style="width:100%;">
+                <div class="vd-ch" style="display:flex; justify-content:space-between; align-items:center;">
+                  <h3 style="margin:0">🚀 Tăng tốc GPU (nâng cao)</h3>
+                  <button class="btn go" id="btnCaiGpu" onclick="caidatInstallGpu()" style="display:none; font-size:11px; padding:3px 10px;">Cài/Sửa</button>
+                  <span id="xlGpuBadge" class="user" style="padding: 3px 10px; border-radius: 20px; font-size: 11.5px; border-color: var(--ok); color: var(--ok); display:none;">🟢 GPU hoạt động tốt</span>
+                </div>
+                <div class="vd-cb">
+                  <div class="sub" id="caidatNote" style="margin:0 0 8px">Đang kiểm tra…</div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <button class="chip-add" onclick="caidatCheckGpu()" style="font-size:11px">🔍 Kiểm tra lại</button>
+                    <span class="sub" id="caidatResult" style="margin:0"></span>
                   </div>
-                  <div style="margin-bottom:13px">
-                    <div id="xlGoiY" class="sub" style="font-size:11px;margin-top:0;line-height:1.4;display:none"></div>
-                    <span id="xlEdgeWrap" style="display:none;margin-top:5px">🎤 <select id="xlEdgeVoice" class="num" style="padding:4px 6px;width:100%"><option value="vi-VN-HoaiMyNeural">Nữ — Hoài My</option><option value="vi-VN-NamMinhNeural">Nam — Nam Minh</option></select></span>
+                  <div class="log" id="caidatLog" style="height:180px;margin-top:12px;display:none"></div>
+                </div>
+              </div>
+            </div>
 
-                    <button type="button" class="chip-add" id="xlNgheThuBtn" style="margin-top:6px" onclick="xlNgheThu(this)">🔊 Nghe thử giọng</button>
+            <!-- ===== CỘT 3 (PHẢI): Các tùy chọn cấu hình ===== -->
+            <div class="vd-col-right" id="vdColRight" style="flex:1.15; display:flex; flex-direction:column; gap:16px;">
+              
+              <!-- Lấy lời thoại (chỉ hiện khi lồng tiếng hoặc phụ đề) -->
+              <div class="vd-card lam-only">
+                <div class="vd-ch"><h3>🎙️ Lấy lời thoại</h3></div>
+                <div class="vd-cb">
+                  <select id="xlLoiThoai" class="num" style="width:100%">
+                    <option value="ocr" selected>Lấy sub từ chữ chạy trên video</option>
+                    <option value="whisper">Lấy sub từ âm thanh video</option>
+                  </select>
+                  <p class="xl-mhint" style="margin: 6px 0 0 0;">Lấy sub từ chữ chạy trên video là chính xác nhất.</p>
+                </div>
+              </div>
+
+              <!-- Tùy chỉnh render (Lật ngang, chỉnh màu, speed, zoom, watermark, logo, save folder) -->
+              <div class="vd-card">
+                <div class="vd-ch"><h3>✏️ Tùy chỉnh render</h3></div>
+                <div class="vd-cb">
+                  <div class="vd-checks">
+                    <label class="vd-chk"><input type="checkbox" id="xlMirror"> Lật ngang</label>
+                    <label class="vd-chk"><input type="checkbox" id="xlColor" checked> Chỉnh màu</label>
+                    <label class="vd-chk"><input type="checkbox" id="xlSpeedOn" checked> Tốc độ
+                      <select id="xlSpeed" class="num" style="width:auto;padding:3px 5px">
+                        <option value="0.8">0.8x</option><option value="0.85">0.85x</option><option value="0.9">0.9x</option>
+                        <option value="1.0" selected>1.0x</option><option value="1.05">1.05x</option><option value="1.1">1.1x</option>
+                        <option value="1.15">1.15x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option>
+                      </select></label>
+                    <label class="vd-chk" title="Phóng to khung: cắt bớt mép + đổi khung (chống bản quyền), giữ độ phân giải"><input type="checkbox" id="xlZoomOn"> Phóng to
+                      <select id="xlZoom" class="num" style="width:auto;padding:3px 5px">
+                        <option value="1.05">105%</option><option value="1.1" selected>110%</option><option value="1.15">115%</option>
+                        <option value="1.2">120%</option><option value="1.3">130%</option><option value="1.5">150%</option>
+                      </select></label>
                   </div>
                   <div class="vd-grid">
-                    <div class="vd-f"><div class="vd-lbl">Ngôn ngữ đích</div>
-                      <select id="xlLangTgt" class="num" onchange="xlLangSave()"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="ko">Tiếng Hàn</option></select></div>
-                    <div class="vd-f"><div class="vd-lbl">Engine dịch</div>
-                      <select id="xlEngine" class="num" onchange="xlUpd()"><option value="">Không dịch</option><option value="gemini" selected>AI</option></select></div>
+                    <div class="vd-f"><div class="vd-lbl">Cắt đầu (giây)</div><input class="num" id="xlTrimS" type="number" min="0" max="600" value="0"></div>
+                    <div class="vd-f"><div class="vd-lbl">Cắt cuối (giây)</div><input class="num" id="xlTrimE" type="number" min="0" max="600" value="0"></div>
+                    <div class="vd-f"><div class="vd-lbl">Tỉ lệ khung</div>
+                      <select id="xlRatio" class="num"><option value="">Giữ nguyên</option><option value="9:16">Dọc 9:16</option><option value="16:9">Ngang 16:9</option></select></div>
                   </div>
-                  <input type="checkbox" id="xlMultiOn" checked>
+                  <div class="vd-checks" style="margin-top:10px;">
+                    <label class="vd-chk" title="Đóng dấu CHỮ lên video"><input type="checkbox" id="xlWm"> Watermark</label>
+                    <label class="vd-chk" title="Chèn LOGO lên video"><input type="checkbox" id="xlLogo"> Logo</label>
+                    <label class="vd-chk" title="Tick = chữ CHẠY quanh khung; bỏ = đứng góc"><input type="checkbox" id="xlWmChay" onchange="xlBrandSave()"> chữ chạy</label>
+                  </div>
+                  <div class="vd-grid">
+                    <div class="vd-f wide">
+                      <div class="vd-lbl">Watermark &amp; Logo</div>
+                      <div class="vd-save" style="display:flex; gap: 8px; align-items:center; flex-wrap:wrap;">
+                        <input class="num" id="xlWmText" placeholder="vd @kênh" oninput="xlBrandSave()" style="width:120px; flex:1;">
+                        
+                        <input type="file" id="xlWmUp" accept="image/*" style="display:none" onchange="xlWmUpload(this)">
+                        <button type="button" class="chip-add" style="font-size:11px" onclick="document.getElementById('xlWmUp').click()">📁 Tải watermark</button>
+                        <span class="sub" id="xlWmFileName" style="font-size:11px;opacity:.8;display:none;"></span>
+                        <button type="button" class="chip-add" id="xlWmClr" style="font-size:11px;display:none" onclick="xlWmClear()">✕</button>
+
+                        <input type="file" id="xlLogoUp" accept="image/*" style="display:none" onchange="xlLogoUpload(this)">
+                        <button type="button" class="chip-add" style="font-size:11px" onclick="document.getElementById('xlLogoUp').click()">📁 Tải logo</button>
+                        <span class="sub" id="xlLogoName" style="font-size:11px;opacity:.8;">chưa có logo</span>
+                        <button type="button" class="chip-add" id="xlLogoClr" style="font-size:11px;display:none" onclick="xlLogoClear()">✕</button>
+                      </div>
+                    </div>
+                    <div class="vd-f wide"><div class="vd-lbl">📂 Thư mục lưu (trống = cạnh video gốc)</div>
+                      <div class="vd-save">
+                        <input class="num" id="xlOut" readonly placeholder="cạnh video gốc">
+                        <button class="chip-add" onclick="chonThuMuc(document.getElementById('xlOut').value,p=>{document.getElementById('xlOut').value=p;xlBrandSave();})" title="Chọn thư mục">📂 Chọn</button>
+                        <button class="chip-add" onclick="document.getElementById('xlOut').value='';xlBrandSave()" title="Xóa">✕</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tùy chọn khác (Tách lời, Tạo phụ đề, Che chữ Trung, Âm lượng gốc) -->
+              <div class="vd-card">
+                <div class="vd-ch"><h3>⚙️ Tùy chọn khác</h3></div>
+                <div class="vd-cb">
+                  <div class="vd-checks" style="display:flex; flex-direction:column; align-items:flex-start; gap:8px;">
+                    <label class="vd-chk" title="Tách nhạc gốc bằng AI, đặt giọng dịch lên trên — giữ nhạc nền"><input type="checkbox" id="xlTachNhac"> Tách lời (giữ nhạc)</label>
+                    <label class="vd-chk"><input type="checkbox" id="xlPhude" onchange="xlUpd()"> Tạo phụ đề</label>
+                    <div id="xlPhudeStyleWrap" style="display:none; margin: 0 0 4px 22px; font-size:12px;">
+                      <div style="margin-bottom:6px; display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span class="sub" style="margin-right:2px">Giao diện caption:</span>
+                        <select id="xlPhudeStyle" class="num" style="padding:2px 6px; border-radius:4px; font-size:11px; background:var(--bg); border:1px solid var(--line); color:var(--fg)" onchange="xlUpd()">
+                          <option value="default" selected>Chữ trắng viền đen (Nền mờ)</option>
+                          <option value="black_on_white">Chữ đen khung trắng</option>
+                          <option value="black_on_yellow">Chữ đen khung vàng</option>
+                          <option value="white_on_yellow_black">Chữ trắng khung vàng viền đen</option>
+                          <option value="white_on_black">Chữ trắng khung đen</option>
+                        </select>
+                        <span class="sub" style="margin: 0 2px 0 6px;">Cỡ chữ:</span>
+                        <input type="number" id="xlPhudeSize" class="num" style="width:40px; padding:2px 6px; border-radius:4px; font-size:11px; background:var(--bg); border:1px solid var(--line); color:var(--fg)" value="13" min="5" max="50" onchange="xlUpd()">
+                      </div>
+                      <div style="margin-top:4px;">
+                        <label class="vd-chk" title="Tách các câu phụ đề quá dài thành các dòng ngắn hơn khớp nhịp đọc"><input type="checkbox" id="xlCheCatDong" onchange="xlUpd()"> Tách dòng phụ đề dài</label>
+                      </div>
+                    </div>
+                    <label class="vd-chk" title="Che dải chữ Trung gốc (tự dò OCR khi render)"><input type="checkbox" id="xlChe" checked onchange="xlUpd()"> Che chữ Trung (Phụ đề chính)</label>
+                    <label class="vd-chk" style="display:none;" title="Chỉ che khi có chữ Trung xuất hiện (che động); khi không có chữ thì không che"><input type="checkbox" id="xlCheDong"> Chỉ che khi có chữ (Che động)</label>
+                    <label class="vd-chk" style="display:none;" title="Tự động phát hiện và che mờ các dòng chữ Trung khác xuất hiện tạm thời (vd: tiêu đề, ghi chú hiện 3s-5s)"><input type="checkbox" id="xlCheKhac"> Che chữ Trung khác (Chú thích/Tiêu đề tạm thời)</label>
+                  </div>
+                  
+                  <!-- Âm lượng gốc -->
+                  <div class="vd-f" style="margin-top:12px;" title="0% = tắt tiếng gốc; cao hơn = giữ tiếng gốc to hơn">
+                    <div class="vd-lbl" style="font-weight:700; color:var(--text); font-size:12px; margin-bottom:4px;">🔉 Âm lượng gốc: <b id="xlGocVolPct" style="color:var(--accent);">20%</b></div>
+                    <input type="range" id="xlGocVol" min="0" max="100" value="20" style="width:100%" oninput="document.getElementById('xlGocVolPct').textContent=this.value+'%'">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Viết lại phong cách (chỉ hiện khi lồng tiếng) -->
+              <div class="vd-card">
+                <div class="vd-ch"><h3>✍️ Viết lại phong cách <span class="help" data-tip="CHỈ dùng cho video ĐÃ REVIEW sẵn (đã có lời kể/thuyết minh) mà bạn muốn ĐỔI CÁCH DIỄN ĐẠT.&#10;Giữ nguyên ý + tình tiết + timeline, chỉ viết lại giọng kể cho khác đi.&#10;⚠️ KHÔNG dùng cho video GỐC chưa review.">?</span></h3></div>
+                <div class="vd-cb">
+                  <div id="pcChips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+                  <p class="xl-mhint" style="margin: 8px 0 0 0;">Chỉ cho video ĐÃ review (có lời kể).</p>
                 </div>
               </div>
 
             </div>
           </div>
+
+        </div>
+
+        <!-- stub giữ ID (JS có tham chiếu) -->
+        <input type="hidden" id="xlModel" value="medium">
+        <button type="button" id="xlCfgToggle" onclick="xlToggleCfg()" style="display:none"></button>
+        <div id="xlCfgBox" style="display:none"></div>
+        <div class="log" id="xlLog" style="display:none"></div>
+
+        <!-- LEGACY: lồng-tiếng-ĐƠN (ẩn — bảng ngôn ngữ ở trên thay thế; GIỮ trong DOM cho JS + backend _xlBuildOpts) -->
+        <div id="xlSingleLegacy" style="display:none">
+          <select id="xlTts" class="num" onchange="xlUpd()"><option value="piper" selected></option><option value="edge"></option></select>
+          <select id="xlPiperVoice" class="num"></select>
+          <select id="xlEdgeVoice" class="num"></select>
+          <select id="xlLangTgt" class="num" onchange="xlLangSave()"><option value="vi"></option></select>
+          <select id="xlEngine" class="num" onchange="xlUpd()"><option value="gemini" selected></option></select>
+          <input type="checkbox" id="xlMultiOn" checked>
         </div>
 
         <!-- ===== MODAL CHỌN VIDEO NGUỒN (duyệt/lọc/tick — rộng) ===== -->
@@ -1423,30 +1468,9 @@
           </div>
         </div>
 
-        <!-- stub giữ ID (JS có tham chiếu) -->
-        <input type="hidden" id="xlModel" value="medium">
-        <button type="button" id="xlCfgToggle" onclick="xlToggleCfg()" style="display:none"></button>
-        <div id="xlCfgBox" style="display:none"></div>
-        <div class="log" id="xlLog" style="display:none"></div>
-
         <script>
-        function vdTab(n){
-          var c1=document.getElementById('vdCol1'),c2=document.getElementById('vdCol2'),
-              t1=document.getElementById('vdT1'),t2=document.getElementById('vdT2');
-          if(c1)c1.classList.toggle('on',n===1); if(c2)c2.classList.toggle('on',n===2);
-          if(t1)t1.classList.toggle('on',n===1); if(t2)t2.classList.toggle('on',n===2);
-        }
+        function vdTab(n){}
         </script>
-        <!-- Cài nâng cao GPU — dời từ tab Lồng tiếng đã gỡ vào Render -->
-        <div class="panel" style="margin-top:16px">
-          <b>🚀 Tăng tốc GPU (nâng cao)</b>
-          <div class="sub" id="caidatNote" style="margin:6px 0 12px">Đang kiểm tra…</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button class="btn go" id="btnCaiGpu" onclick="caidatInstallGpu()" style="display:none">🚀 Cài/sửa tăng tốc GPU</button>
-            <span class="sub" id="caidatResult"></span>
-          </div>
-          <div class="log" id="caidatLog" style="height:180px;margin-top:12px;display:none"></div>
-        </div>
       </section>
 
       <!-- ===== MODAL: TỰ ĐỘNG RENDER ===== -->
@@ -1520,7 +1544,7 @@
       <!-- ===== API KEYS AI (Đã chuyển sang tab Cài đặt) ===== -->
 
             <section id="v-bam" class="hidden">
-        <h1 class="page">✂️ Băm nhỏ<span class="help" data-tip="Cắt video DÀI thành nhiều clip ngắn, tùy chọn đổi khung 9:16 nền mờ.&#10;Đưa video vào: '➕ Thêm từ máy của bạn' HOẶC '📁 Chọn từ video đã tải' → bấm Băm.&#10;Video dài (>40 phút) tự CHIA ĐỀU để khỏi treo máy.&#10;Clip video từ máy về 'File đã tải'; video đã tải: clip_nho/ cạnh nguồn.">?</span></h1>
+        <h1 class="page">✂️ Chia nhỏ<span class="help" data-tip="Cắt video DÀI thành nhiều clip ngắn, tùy chọn đổi khung 9:16 nền mờ.&#10;Đưa video vào: '➕ Thêm từ máy của bạn' HOẶC '📁 Chọn từ video đã tải' → bấm Băm.&#10;Video dài (>40 phút) tự CHIA ĐỀU để khỏi treo máy.&#10;Clip video từ máy về 'File đã tải'; video đã tải: clip_nho/ cạnh nguồn.">?</span></h1>
         <div class="sub">Cắt video dài → nhiều clip ngắn theo cảnh (PySceneDetect), tùy chọn khung 9:16.
           <button class="chip-add" onclick="bamLoad()" style="margin-left:8px">🔄 Làm mới</button></div>
         <div class="panel" style="display:grid;gap:12px;align-content:start">
@@ -1626,8 +1650,8 @@
 
       <!-- ===== VIDEO MỚI THEO KÊNH ===== -->
       <section id="v-lichsu" class="hidden">
-        <h1 class="page">🕘 Lịch sử cào<span class="help" data-tip="Mọi bài ĐÃ CÀO (từ khóa / kênh / link), gom từ dữ liệu cào.&#10;Lọc theo nền tảng, tìm tiêu đề/kênh/từ khóa.&#10;Bài ĐÃ TẢI làm mờ + nhãn ✓; lỡ xoá file vẫn bấm 'Tải lại' được.">?</span></h1>
-        <div class="sub">Mọi bài đã cào (kể cả theo kênh) — lọc &amp; tìm. Bài <b>đã tải</b> làm mờ; lỡ xoá → bấm <b>Tải lại</b>.</div>
+        <h1 class="page">🕘 Lịch sử tìm<span class="help" data-tip="Mọi bài đã tìm/tải (từ khóa / kênh / link), gom từ dữ liệu tải.&#10;Lọc theo nền tảng, tìm tiêu đề/kênh/từ khóa.&#10;Bài ĐÃ TẢI làm mờ + nhãn ✓; lỡ xoá file vẫn bấm 'Tải lại' được.">?</span></h1>
+        <div class="sub">Mọi bài đã tải (kể cả theo kênh) — lọc &amp; tìm. Bài <b>đã tải</b> làm mờ; lỡ xoá → bấm <b>Tải lại</b>.</div>
         <div class="panel" style="display:grid;gap:12px;align-content:start">
           <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
             <input id="lsSearch" class="num" placeholder="🔍 Tìm tiêu đề / kênh / từ khóa..." style="flex:1;min-width:200px" oninput="lsDebounce()">
@@ -1849,7 +1873,7 @@
         .wf-guide-body li{margin-bottom:5px}
       </style>
       <section id="v-quytrinh" class="hidden">
-        <h1 class="page">🔀 Quy trình<span class="help" data-tip="Pipeline tự động: chọn các bước (Nguồn → Băm → Render → Xuất), bật/tắt từng bước.&#10;Hệ thống tự kiểm tra phụ thuộc: tắt bước trên thì bước dưới cần nó sẽ tự khoá.&#10;Lưu nhiều quy trình để dùng lại.">?</span></h1>
+        <h1 class="page">🔀 Tự động<span class="help" data-tip="Pipeline tự động: chọn các bước (Nguồn → Băm → Render → Xuất), bật/tắt từng bước.&#10;Hệ thống tự kiểm tra phụ thuộc: tắt bước trên thì bước dưới cần nó sẽ tự khoá.&#10;Lưu nhiều quy trình để dùng lại.">?</span></h1>
         <div class="sub">Tạo <b>chuỗi xử lý tự động</b> — mỗi bước lấy kết quả bước trước. Bật/tắt từng bước; bước thiếu đầu vào sẽ tự khoá. Lưu nhiều quy trình để dùng lại.</div>
         <details class="wf-guide">
           <summary>📖 Hướng dẫn sử dụng <span class="sub" style="font-weight:400">(bấm để mở/đóng)</span></summary>
@@ -2014,7 +2038,7 @@
           </div>
         </div>
 
-        <div class="panel" style="margin-top:16px;border:1px solid var(--purple)">
+        <div class="panel" style="margin-top:16px;border:1px solid var(--purple);display: none !important;">
           <b>🔑 Khóa cho AI (API Keys)</b>
           <div class="sub" style="margin-top:6px">Dán key AI để dịch phụ đề hoặc để <b>Trợ lý AI</b> ra lệnh giúp bạn. Dùng <b>Gemini</b>, <b>Groq</b> (tốt nhất) hoặc <b>Ollama Cloud</b>. <i>(Dịch phụ đề bằng AI mặc định của tool thì KHÔNG cần key.)</i></div>
 
@@ -2059,7 +2083,7 @@
       </section>
       <section id="v-banggia" class="hidden">
         <h1 class="page">💎 Bảng Giá</h1>
-        <div class="sub">Kích hoạt một lần — Sở hữu vĩnh viễn. Liên hệ admin để nâng cấp — Zalo <b>0394.426.246</b>.</div>
+        <div class="sub">Chọn phiên bản phù hợp để bắt đầu hành trình MMO của bạn hôm nay. Liên hệ admin để nâng cấp — Zalo <b>0394.426.246</b>.</div>
         <div class="bg-per" id="bgPer" style="display:none">
           <button data-m="1">1 tháng</button><button data-m="6" class="on">6 tháng</button><button data-m="12">1 năm</button>
         </div>
@@ -2512,10 +2536,10 @@ async function openLogin(plats){
   if(!plats){   // nút "Đăng nhập nền tảng" → mở đúng nền tảng ĐANG CHỌN (không mở cứng dy/bili/xhs)
     const sel=document.querySelector('#plats .plat.sel');
     const p=sel&&sel.dataset.p;
-    const CAN_LOGIN=["dy","bili","rednote","fb"];   // XHS nội địa gộp vào rednote; yt+tt công khai; fb tùy chọn
+    const CAN_LOGIN=["dy","bili"];
     if(p&&CAN_LOGIN.includes(p)) plats=[p];
     else if(p){ alert("Nền tảng này không cần đăng nhập (nội dung công khai)."); return; }
-    else plats=["dy","bili","rednote"];
+    else plats=["dy","bili"];
   }
   try{ await post("/api/open_login",{platforms:plats}); }catch(e){}
   lgPoll(plats);   // tự dò trạng thái: đăng nhập xong cửa sổ TỰ ĐÓNG → thẻ tự cập nhật
@@ -2546,7 +2570,7 @@ function renderLcards(d){
   box.innerHTML="";
   lgPlats.forEach(pl=>{
     const st=(d.trang_thai||{})[pl.ma]||"unknown";
-    const e=document.createElement("div"); e.className="lcard "+st;
+    const e=document.createElement("div"); e.className="lcard "+st; e.dataset.p=pl.ma;
     const ic=pl.logo?`<img src="logos/${pl.logo}.png" alt="${pl.ten}" onerror="this.style.display='none'">`
                     :`<div class="lletter" style="background:${pl.mau||'#444'}">${pl.chu||pl.ten[0]}</div>`;
     // Nút Đăng nhập (khi chưa) / Đăng xuất (khi đã) — TÔ MÀU theo trạng thái (class .btnst-*)
@@ -2686,6 +2710,7 @@ document.querySelectorAll("#nav a").forEach(a=>a.onclick=()=>{
   if(a.dataset.v==="banggia") bgRender();
   if(a.dataset.v==="goi") goiMoTab();
   wizSync(a.dataset.v);   // đồng bộ header wizard 5 bước theo tab hiện tại
+  syncTopTitle();
 });
 
 // ---- Header wizard 5 bước: click điều hướng + tự highlight theo tab
@@ -2700,7 +2725,36 @@ function wizSync(v){
   document.querySelectorAll("#wiz .ws").forEach(b=>{ const n=+b.dataset.step;
     b.classList.toggle("done", cur>0 && n<cur); b.classList.toggle("cur", n===cur); });
 }
+function syncTopTitle() {
+  const activeLink = document.querySelector("#nav a.active");
+  if (!activeLink) return;
+  const activeVal = activeLink.dataset.v;
+  const sectId = "v-" + (activeVal === "darender" ? "files" : activeVal);
+  const sect = document.getElementById(sectId);
+  if (!sect) return;
+  let h1 = sect.querySelector("h1.page");
+  if (!h1) {
+    h1 = document.querySelector(`#topTitle h1.page[data-sect="${sectId}"]`);
+  }
+  document.querySelectorAll("h1.page").forEach(h => {
+    h.style.display = "none";
+  });
+  if (h1) {
+    const topTitle = document.getElementById("topTitle");
+    if (topTitle) {
+      if (h1.parentNode !== topTitle) {
+        h1.setAttribute("data-sect", sectId);
+        topTitle.appendChild(h1);
+      }
+      h1.style.display = "flex";
+      h1.style.fontSize = "20px";
+      h1.style.margin = "0";
+      h1.style.alignItems = "center";
+    }
+  }
+}
 wizSync("cao");   // tab Cào là mặc định khi mở app
+syncTopTitle();
 
 // ---- Stepper trong trang (Render / Lồng tiếng): chỉ thị bước + cuộn tới mục
 function pwizSet(wrapId, step){
@@ -2738,16 +2792,16 @@ document.addEventListener("keydown",e=>{
 let PLAN = null;
 const GIA = {
   free:        {ten:"FREE",          gia:"Miễn phí", sub:"Dùng thử 7 ngày", hot:false},
-  pro:         {ten:"GÓI THÁNG",     gia:"299.000đ", sub:"Cơ bản (1 tháng)", hot:false},
-  unlimited:   {ten:"GÓI NĂM",       gia:"999.000đ", sub:"Mở rộng (1 năm)", hot:true},
-  lifetime:    {ten:"VĨNH VIỄN",     gia:"1.799.000đ", sub:"Mở rộng (Trọn đời)", hot:false},
+  pro:         {ten:"GÓI THÁNG",     gia:"299.000đ", sub:"Tháng (Cơ Bản)", hot:false},
+  unlimited:   {ten:"GÓI 1 NĂM",     gia:"1.999.000đ", sub:"1 Năm (Khuyên Dùng)", hot:true},
+  lifetime:    {ten:"GÓI 2 NĂM",     gia:"3.499.000đ", sub:"2 Năm (Đặc Biệt)", hot:false},
   expired:     {ten:"HẾT HẠN",       gia:"—", sub:"Vui lòng gia hạn", hot:false},
 };
 const TINHNANG = {
   free:        ["🎁 Dùng thử 7 ngày", "Cào tối đa 3 video/ngày", "Lồng tiếng 1 video/ngày (≤1p)", "Tính năng cơ bản"],
-  pro:         ["🔥 Tính năng Cơ bản", "Cào video không giới hạn", "Lồng tiếng 30 video/ngày (≤120 phút)", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao", "Tặng kèm Video HDSD Cơ bản"],
-  unlimited:   ["👑 Tính năng Mở rộng", "Cào video không giới hạn", "Lồng tiếng không giới hạn", "Mở khóa Trợ lý AI", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao", "🎁 Bộ 3 Quà Tặng Reup Độc Quyền"],
-  lifetime:    ["♾️ Tính năng Mở rộng", "Cào video không giới hạn", "Lồng tiếng không giới hạn", "Mở khóa Trợ lý AI", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao", "🎁 Bộ 3 Quà Tặng Reup Độc Quyền", "✨ Hỗ trợ cập nhật trọn đời"],
+  pro:         ["🔥 Tính năng Cơ bản", "Dành cho người mới thử nghiệm", "Cào video không giới hạn", "Lồng tiếng 30 video/ngày (≤120 phút)", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao", "Tặng kèm Video HDSD Cơ bản"],
+  unlimited:   ["👑 Gói 1 Năm (Khuyên Dùng)", "Tiết kiệm 50% (~166k/tháng)", "Cào video không giới hạn", "Lồng tiếng không giới hạn", "Mở khóa Trợ lý AI", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao", "🎁 Bộ 2 Quà Tặng Độc Quyền:", "— 20 kênh Douyin VIP", "— Top 10 ngách dễ ăn tiền nhất"],
+  lifetime:    ["♾️ Gói 2 Năm (Đặc Biệt)", "Mở khóa toàn bộ tính năng VIP", "Render không giới hạn số lượng", "Hỗ trợ nâng cấp VIP miễn phí", "Cào video không giới hạn", "Lồng tiếng không giới hạn", "Mở khóa Trợ lý AI", "Băm nhỏ & Theo dõi & Quy trình", "Giọng đọc nâng cao"],
   expired:     ["Hết hạn sử dụng"],
 };
 async function goiLoad(){
@@ -2761,8 +2815,8 @@ async function goiLoad(){
   const ten=(GIA[activeTier]||GIA.free).ten;
   const pb=document.getElementById("proBoxTen"), ps=document.getElementById("proBoxSub"), box=document.querySelector(".side .pro");
   if(pb) pb.textContent="🎫 Gói: "+ten;
-  if(ps) ps.textContent = PLAN.tier==="unlimited" ? "Bạn đang dùng gói cao nhất 🎉" : "Mở khoá đầy đủ tính năng, không giới hạn.";
-  if(box) box.style.display = PLAN.tier==="unlimited" ? "none" : "";
+  if(ps) ps.textContent = (PLAN.tier==="unlimited" || PLAN.tier==="lifetime") ? "Bạn đang dùng gói cao nhất 🎉" : "Mở khoá đầy đủ tính năng, không giới hạn.";
+  if(box) box.style.display = (PLAN.tier==="unlimited" || PLAN.tier==="lifetime") ? "none" : "";
 }
 function applyGating(){
   const L=(PLAN&&PLAN.limits)||{};
@@ -3176,7 +3230,7 @@ function xlRenderGrid(){
   xlRenderTabsRender();
   const fs=xlLoc();
   if(!fs.length){
-    box.innerHTML='<div class="sub" style="margin:0;grid-column:1/-1">'+(xlAllVids.length?"Không tìm thấy video khớp.":"Chưa có video — sang Cào ngay tải về.")+'</div>';
+    box.innerHTML='<div class="sub" style="margin:0;grid-column:1/-1">'+(xlAllVids.length?"Không tìm thấy video khớp.":"Chưa có video — sang Tìm và tải video để tải về.")+'</div>';
     xlUpdCount(); return;
   }
   box.innerHTML="";
@@ -3823,6 +3877,8 @@ function xlUpd(){
   if(noDich){ P.checked=false; D.checked=false; }
   [P,D].forEach(e=>{const lb=e.closest("label"); if(lb) lb.style.opacity=noDich?"0.4":"1";});
   const phu=P.checked, dub=D.checked, lam=phu||dub;
+  document.body.classList.toggle("dub-active", !!dub);
+  document.body.classList.toggle("lam-active", !!lam);
   const phuStyleWrap = document.getElementById("xlPhudeStyleWrap");
   if(phuStyleWrap) phuStyleWrap.style.display = phu ? "block" : "none";
   const dep=(id,on,uncheck)=>{
@@ -3831,7 +3887,7 @@ function xlUpd(){
     if(!on&&uncheck&&e.type==="checkbox") e.checked=false;
     const lb=e.closest("label"); if(lb) lb.style.opacity=on?"1":"0.4";
   };
-  dep("xlChe", lam, false);        // che chữ Trung: chỉ khi có phụ đề/lồng tiếng
+  // dep("xlChe", lam, false);        // che chữ Trung: cho phép chọn độc lập kể cả khi không dịch/lồng tiếng
   dep("xlModel", lam, false);      // model nhận dạng
   const ttsEngine=splitTts((document.getElementById("xlTts")||{}).value).tts||"edge";
   const tw=document.getElementById("xlTts"); if(tw){tw.disabled=!dub; const lb=tw.closest("label"); if(lb) lb.style.opacity=dub?"1":"0.4";}
@@ -3893,13 +3949,17 @@ function _xlBuildOpts(){   // dựng opts render từ panel (dùng cho xlRun (k�
     mirror:document.getElementById("xlMirror").checked,
     speed: speedOn? parseFloat(document.getElementById("xlSpeed").value)||0.8 : 1.0,
     zoom: (document.getElementById("xlZoomOn")||{}).checked ? (parseFloat((document.getElementById("xlZoom")||{}).value)||1.0) : 1.0,   // phóng to khung (cắt mép)
-    watermark:false,   // watermark giờ là CHỮ (text_wm) — không dùng ảnh watermark cố định
+    watermark:document.getElementById("xlWm").checked,
+    wm_file:((document.getElementById("xlWm").checked && xlWmPath)? xlWmPath.split(/[\\/]/).pop() : ""),
     color:document.getElementById("xlColor").checked,
     trim_start:parseFloat(document.getElementById("xlTrimS").value)||0,
     trim_end:parseFloat(document.getElementById("xlTrimE").value)||0,
     phude:document.getElementById("xlPhude").checked,
     phude_style:document.getElementById("xlPhudeStyle").value||"default",
+    phude_size:parseInt(document.getElementById("xlPhudeSize").value)||0,
+    che_cat_dong:document.getElementById("xlCheCatDong").checked,
     che_chu:document.getElementById("xlChe").checked,
+    che_dong:document.getElementById("xlCheDong").checked,
     che_khac:document.getElementById("xlCheKhac").checked,
     long_tieng:document.getElementById("xlDub").checked,
     loi_thoai:(document.getElementById("xlLoiThoai")||{}).value||"ocr",   // ocr=Đọc từ sub | whisper=Giọng nói
@@ -3971,6 +4031,12 @@ function xlDubFootUpd(){
   const n=box.querySelectorAll("input.xl-langck:checked").length;
   const tot=(typeof APP_LANG_KEYS!=="undefined")?APP_LANG_KEYS.length:74;
   const f=document.getElementById("xlLangFoot"); if(f) f.innerHTML="Đã chọn <b>"+n+"</b> / "+tot+" ngôn ngữ";
+}
+function xlClearAllLangs(){
+  const box=document.getElementById("xlLangBatch"); if(!box) return;
+  box.querySelectorAll("input.xl-langck:checked").forEach(ck => ck.checked = false);
+  if(typeof xlLangBatchUpd==="function") xlLangBatchUpd();
+  xlDubFootUpd();
 }
 function xlDubMain(){   // toggle "Bật lồng tiếng" → dub vs chỉ-phụ-đề (bảng LUÔN hiện)
   if(typeof xlUpd==="function") xlUpd();
@@ -5359,11 +5425,15 @@ function xlApplyOpts(o){   // đổ 1 bộ render_opts đã lưu vào panel #xlC
   chk("xlMirror",o.mirror); chk("xlColor",o.color!==false);
   const speedOn=(o.speed||1)!==1; chk("xlSpeedOn",speedOn); if(speedOn) set("xlSpeed",o.speed||0.8);
   set("xlTrimS",o.trim_start||0); set("xlTrimE",o.trim_end||0);
-  chk("xlPhude",o.phude!==false); set("xlPhudeStyle",o.phude_style||"default"); chk("xlChe",o.che_chu!==false); chk("xlCheKhac",!!o.che_khac); chk("xlDub",o.long_tieng!==false);
+  chk("xlPhude",o.phude!==false); set("xlPhudeStyle",o.phude_style||"default"); set("xlPhudeSize",o.phude_size||13); chk("xlCheCatDong",!!o.che_cat_dong); chk("xlChe",o.che_chu!==false); chk("xlCheDong",o.che_dong!==false); chk("xlCheKhac",!!o.che_khac); chk("xlDub",o.long_tieng!==false);
   set("xlLoiThoai",o.loi_thoai||"ocr"); set("xlEngine",o.engine==="google"?"gemini":(o.engine!=null?o.engine:"gemini"));   // google đã bỏ → map về AI
   set("xlTts",o.tts||"piper"); set("xlRatio",o.ratio||""); set("xlChuDe",o.chu_de||"");
   set("xlGocVol",Math.round((o.goc_vol||0)*100)); chk("xlTachNhac",o.tach_nhac); set("xlMaxSp",o.max_speed||"");
   chk("xlDichTC",o.dich_thu_cong);
+  chk("xlLogo", !!o.logo);
+  if (o.logo && o.logo.path) { xlLogoPath = o.logo.path; xlLogoShow(); }
+  chk("xlWm", !!o.watermark || !!o.wm_file);
+  if (o.wm_file) { xlWmPath = o.wm_file; xlWmShow(); }
   if(typeof _pcSel!=="undefined"){ _pcSel=new Set(o.phong_cach||[]); try{localStorage.setItem("vc_phong_cach",JSON.stringify([..._pcSel]));}catch(e){} if(typeof pcRender==="function") pcRender(); }
   if(typeof xlUpd==="function") xlUpd();
   setTimeout(()=>{   // giọng cụ thể: áp SAU xlUpd (picker đã hiện đúng danh sách theo engine tts)
@@ -5801,6 +5871,7 @@ function fApplyMode(){
     pb.textContent=on?("🗂️ Tự phân loại: BẬT ("+_plCfg.muc.length+" thể loại)"):"🗂️ Tự phân loại: TẮT";
     pb.style.color=on?"var(--ok)":"var(--muted)"; }
   if(isR){ filRender.clear(); } else { filTheLoai.clear(); }
+  syncTopTitle();
 }
 function applyFilters(){
   fComputePer();
@@ -5934,7 +6005,7 @@ async function vietHoa(f){
   if(!confirm(mo))return;
   const r=await post("/api/localize",body);
   if(!r.ok){alert(r.msg||"Không chạy được.");return;}
-  alert("Đã bắt đầu. Theo dõi tiến trình ở khung Nhật ký (tab Lịch sử hoặc khung log ở Cào ngay). Xong thì bấm 🔄 Làm mới.");
+  alert("Đã bắt đầu. Theo dõi tiến trình ở khung Nhật ký (tab Lịch sử hoặc khung log ở Tìm và tải video). Xong thì bấm 🔄 Làm mới.");
 }
 // ----- Chọn nhiều video -> xử lý hàng loạt (né bản quyền thủ công) -----
 let selSet=new Set();
@@ -6189,11 +6260,13 @@ async function edUpLogo(inp){
 }
 // ===== Watermark CHỮ + Logo: NHẬP 1 lần, LƯU VĨNH VIỄN (localStorage) — dùng cho mọi lần render =====
 let xlLogoPath = "";   // đường dẫn logo đã tải (lưu lại)
-function xlBrandSave(){   // lưu vĩnh viễn chữ watermark + tick chạy + logo + THƯ MỤC LƯU (out_dir set cứng)
+let xlWmPath = "";     // đường dẫn watermark đã tải (lưu lại)
+function xlBrandSave(){   // lưu vĩnh viễn chữ watermark + tick chạy + logo + watermark ảnh + THƯ MỤC LƯU
   try{
     localStorage.setItem("vc_wm_text", ((document.getElementById("xlWmText")||{}).value)||"");
     localStorage.setItem("vc_wm_chay", (((document.getElementById("xlWmChay")||{}).checked)?"1":"0"));
     localStorage.setItem("vc_logo_path", xlLogoPath||"");
+    localStorage.setItem("vc_wm_path", xlWmPath||"");
     localStorage.setItem("vc_out_dir", ((document.getElementById("xlOut")||{}).value)||"");   // GIỮ CỨNG thư mục lưu user chọn
   }catch(e){}
 }
@@ -6203,15 +6276,26 @@ function xlLogoShow(){
   if(n) n.textContent = name ? ("✓ "+name) : "chưa có logo";
   if(x) x.style.display = name ? "" : "none";
 }
-function xlBrandLoad(){   // nạp lại chữ/logo/thư mục đã lưu khi mở tab Render
+function xlWmShow(){
+  const name = xlWmPath ? xlWmPath.split(/[\\/]/).pop() : "";
+  const n=document.getElementById("xlWmFileName"), x=document.getElementById("xlWmClr");
+  if(n) {
+    n.textContent = name ? ("✓ "+name) : "";
+    n.style.display = name ? "" : "none";
+  }
+  if(x) x.style.display = name ? "" : "none";
+}
+function xlBrandLoad(){   // nạp lại chữ/logo/watermark/thư mục đã lưu khi mở tab Render
   try{
     const t=localStorage.getItem("vc_wm_text"); const te=document.getElementById("xlWmText"); if(te && t!=null) te.value=t;
     const c=localStorage.getItem("vc_wm_chay"); const ce=document.getElementById("xlWmChay"); if(ce) ce.checked=(c==="1");
-    const od=localStorage.getItem("vc_out_dir"); const oe=document.getElementById("xlOut"); if(oe && od!=null) oe.value=od;   // KHÔI PHỤC thư mục lưu (không reset về mặc định)
-    const we=document.getElementById("xlWm"); if(we && t && t.trim()) we.checked=true;   // có chữ watermark đã lưu → bật sẵn để watermark CHẠY
+    const od=localStorage.getItem("vc_out_dir"); const oe=document.getElementById("xlOut"); if(oe && od!=null) oe.value=od;   // KHÔI PHỤC thư mục lưu
+    const we=document.getElementById("xlWm"); if(we && t && t.trim()) we.checked=true;   // có chữ watermark đã lưu
     xlLogoPath=localStorage.getItem("vc_logo_path")||"";
+    xlWmPath=localStorage.getItem("vc_wm_path")||"";
   }catch(e){}
   xlLogoShow();
+  xlWmShow();
 }
 async function xlLogoUpload(inp){   // tải 1 logo -> lưu lại (vĩnh viễn) làm logo dùng chung
   const f=inp.files&&inp.files[0]; if(!f)return;
@@ -6222,6 +6306,15 @@ async function xlLogoUpload(inp){   // tải 1 logo -> lưu lại (vĩnh viễn)
   xlLogoPath=r.path||""; xlBrandSave(); xlLogoShow();
 }
 function xlLogoClear(){ xlLogoPath=""; xlBrandSave(); xlLogoShow(); }
+async function xlWmUpload(inp){   // tải 1 watermark -> lưu lại (vĩnh viễn) làm watermark dùng chung
+  const f=inp.files&&inp.files[0]; if(!f)return;
+  if(f.size>8*1024*1024){alert("Ảnh quá lớn (>8MB).");inp.value="";return;}
+  const data=await new Promise(function(res,rej){const fr=new FileReader();fr.onload=function(){res(fr.result);};fr.onerror=rej;fr.readAsDataURL(f);});
+  const r=await post("/api/upload_logo",{data,name:f.name}); inp.value="";
+  if(!r||!r.ok){alert((r&&r.msg)||"Tải watermark thất bại.");return;}
+  xlWmPath=r.path||""; xlBrandSave(); xlWmShow();
+}
+function xlWmClear(){ xlWmPath=""; xlBrandSave(); xlWmShow(); }
 function xlToggleCfg(force){   // ẩn/hiện panel cấu hình render (màn ngắn/laptop — ẩn để thấy video)
   const b=document.getElementById('xlCfgBox'), btn=document.getElementById('xlCfgToggle');
   if(!b)return;
@@ -6240,11 +6333,15 @@ async function xlPreview5s(){
   if(!ds.length){alert("Chọn 1 video trước (bấm vào ảnh).");return;}
   const opts={
     che_chu:document.getElementById("xlChe").checked,
+    che_dong:document.getElementById("xlCheDong").checked,
     che_khac:document.getElementById("xlCheKhac").checked,
     mirror:document.getElementById("xlMirror").checked,
     ratio:(document.getElementById("xlRatio")||{}).value||"",
     logo:(rdLogo&&rdLogo.path)? rdLogo : (((document.getElementById("xlLogo")||{}).checked && xlLogoPath)? {path:xlLogoPath, goc:"tr"} : null),
-    text_wm:(rdText&&rdText.text)? rdText : (((((document.getElementById("xlWmText")||{}).value||"").trim()))? {text:((document.getElementById("xlWmText").value)||"").trim(), chay:((document.getElementById("xlWmChay")||{}).checked)||false, goc:"br"} : null)
+    text_wm:(rdText&&rdText.text)? rdText : (((((document.getElementById("xlWmText")||{}).value||"").trim()))? {text:((document.getElementById("xlWmText").value)||"").trim(), chay:((document.getElementById("xlWmChay")||{}).checked)||false, goc:"br"} : null),
+    phude_style:document.getElementById("xlPhudeStyle").value||"default",
+    phude_size:parseInt(document.getElementById("xlPhudeSize").value)||0,
+    che_cat_dong:document.getElementById("xlCheCatDong").checked,
   };
   pvShow("⏳ Đang tạo preview 5s (cắt + hiệu ứng hình)… khoảng 5-15s");
   const r=await post("/api/preview5s",{path:ds[0], opts:opts});
@@ -6470,7 +6567,7 @@ function bamPickRender(){
                style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:${added?'#555':'var(--accent)'};color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:${added?'default':'pointer'};font-size:12px;white-space:nowrap">${added?'✓ Đã thêm':'➕ Thêm'}</button>
        <div style="font-size:11px;margin-top:4px;line-height:1.3;max-height:28px;overflow:hidden">${esc(v.name)}</div>
      </div>`;
-  }).join("") : '<div style="color:var(--muted);padding:16px">Chưa có video đã tải. Hãy cào video trước (tab Cào ngay).</div>';
+  }).join("") : '<div style="color:var(--muted);padding:16px">Chưa có video đã tải. Hãy tải video trước (tab Tìm và tải video).</div>';
   // Lazy-load metadata khi cuộn tới thay vì tải hết 1 lượt (picker liệt kê tới 400 video → set src+preload
   // ngay cho toàn bộ làm trình duyệt xin metadata cùng lúc → LAG khi mở picker). Mirror filVidIO (fRenderPage).
   if(bamPickVidIO) bamPickVidIO.disconnect();
@@ -6946,7 +7043,7 @@ async function tqLoad(){
     rp.innerHTML = ks.length>1 ? ('<span class="sub" style="font-size:11px;align-self:center">Thử lại theo nền:</span>'+ks.map(k=>`<button class="chip-add" onclick='tqRetryPlat(${aj(k)})' style="font-size:12px" title="Chỉ xếp lại task lỗi của nền này (vd đăng nhập lại Douyin → Retry Douyin)">↻ ${esc(_TQ_NT[k]||k)} (${fail[k]})</button>`).join("")) : "";
   }
   tqNotify(dem, tasks);
-  if(!tasks.length){ box.innerHTML='<div class="sub" style="margin:6px 0">Hàng đợi trống — bấm "📋 Thêm vào hàng đợi" để xếp job.</div>'; return; }
+  if(!tasks.length){ box.innerHTML='<div class="sub" style="margin:20px 0;text-align:center;line-height:1.6">Chưa có tác vụ nào.<br>Bắt đầu bằng cách xem trước hoặc tải ngay.</div>'; return; }
   const ord={dang:0,cho:1,loi:2,xong:3};
   const arr=[...tasks].sort((a,b)=>((ord[a.trang_thai]??9)-(ord[b.trang_thai]??9))||(a.id-b.id));
   box.innerHTML=arr.map(t=>{
@@ -7118,7 +7215,7 @@ async function poll(){
     caoApplyDate();
   }catch(e){}
 }
-// ---- Cào ngay: combobox lọc số "đã cào" theo ngày (như dashboard)
+// ---- Tìm và tải video: combobox lọc số "đã tải" theo ngày (như dashboard)
 let _caoStats=null;
 function caoFillDates(perNgay){
   const sel=document.getElementById("caoDate"); if(!sel)return;
@@ -7304,7 +7401,7 @@ function wfToggle(id){ const b=WF_BLOCKS.find(x=>x.id===id); if(!b||!b.optional)
 function wfChoice(id,v){ wfState[id].choice=v; wfRender(); wfConfigRender(); if(id==="nguon")wfAutoRender(); }
 function wfSelect(id){ wfSel=id; wfRender(); wfConfigRender(); }
 function wfCfg(id,k,v){ (wfState[id].cfg=wfState[id].cfg||{})[k]=v; try{localStorage.setItem("wf_state",JSON.stringify(wfState));}catch(e){} }
-function _wfPlatSel(v){ const o=[["dy","Douyin"],["bili","Bilibili"],["xhs","Xiaohongshu"]];
+function _wfPlatSel(v){ const o=[["dy","Douyin"],["bili","Bilibili"]];
   return `<select class="num" onchange="wfCfg('nguon','platform',this.value)">`+o.map(([k,n])=>`<option value="${k}"${v===k?' selected':''}>${n}</option>`).join("")+`</select>`; }
 function _ratioSel(id,v){ const o=[["","Giữ nguyên"],["9:16","Dọc 9:16"],["16:9","Ngang 16:9"]];
   return `<select class="num" onchange="wfCfg('${id}','ratio',this.value)">`+o.map(([k,n])=>`<option value="${k}"${(v||'')===k?' selected':''}>${n}</option>`).join("")+`</select>`; }
@@ -7333,7 +7430,7 @@ function wfConfigRender(){   // CỘT PHẢI: cấu hình của block ĐANG CH�
       <div class="wf-row"><label>Link kênh (mỗi dòng 1 kênh)</label><textarea class="num" rows="4" oninput="wfCfg('nguon','kenh',this.value)" placeholder="Douyin /user/… · Bilibili space…">${esc(cf('kenh',''))}</textarea></div>
       <div class="wf-row"><label>Số video / kênh</label><input class="num" type="number" min="1" value="${cf('so_video',10)}" oninput="wfCfg('nguon','so_video',parseInt(this.value)||10)"></div>`;
     else if(ch==="folder") h+=`<div class="wf-row"><label>Thư mục chứa video</label><div style="display:flex;gap:6px"><input class="num" readonly value="${esc(cf('folder',''))}" placeholder="(chưa chọn)" style="flex:1"><button class="chip-add" onclick="chonThuMuc((wfState.nguon.cfg||{}).folder||'',p=>{wfCfg('nguon','folder',p);wfConfigRender();})">📂 Chọn</button></div></div>`;
-    if(ch==="cao"||ch==="kenh") h+=`<div class="hint" style="border-top:1px solid var(--line);padding-top:11px;margin-top:4px">▶ Chạy = cào ngay rồi xử lý. Muốn tự cào theo lịch → khung <b>🔁 Tự động hóa</b> phía dưới (⏰ Hẹn giờ / 👁 Theo dõi).</div>`;
+    if(ch==="cao"||ch==="kenh") h+=`<div class="hint" style="border-top:1px solid var(--line);padding-top:11px;margin-top:4px">▶ Chạy = tải ngay rồi xử lý. Muốn tự tải theo lịch → khung <b>🔁 Tự động hóa</b> phía dưới (⏰ Hẹn giờ / 👁 Theo dõi).</div>`;
     else if(ch==="nhap"||ch==="folder") h+=`<div class="hint">▶ Chạy = lấy video từ ${ch==="nhap"?"các link trên":"thư mục"} rồi xử lý qua các bước.</div>`;
   } else if(b.id==="bam"){
     h+=`<div class="wf-row"><label>Khung hình</label>${_ratioSel('bam',cf('ratio',''))}</div>
@@ -7404,14 +7501,17 @@ function wfRenderOpts(){   // đọc THẲNG panel cấu hình tab Render (đã 
   return {
     mirror:!!g("xlMirror").checked, color:g("xlColor").checked!==false,
     speed: speedOn?(parseFloat(g("xlSpeed").value)||0.8):1.0,
-    zoom:(g("xlZoomOn")||{}).checked?(parseFloat((g("xlZoom")||{}).value)||1.0):1.0, watermark:false,
+    zoom:(g("xlZoomOn")||{}).checked?(parseFloat((g("xlZoom")||{}).value)||1.0):1.0,
+    watermark:!!g("xlWm").checked,
+    wm_file:((g("xlWm").checked && typeof xlWmPath!=="undefined" && xlWmPath)? xlWmPath.split(/[\\/]/).pop() : ""),
     trim_start:parseFloat(g("xlTrimS").value)||0, trim_end:parseFloat(g("xlTrimE").value)||0,
-    phude:!!g("xlPhude").checked, phude_style:g("xlPhudeStyle").value||"default", che_chu:!!g("xlChe").checked, che_khac:!!g("xlCheKhac").checked, long_tieng:!!g("xlDub").checked,
+    phude:!!g("xlPhude").checked, phude_style:g("xlPhudeStyle").value||"default", phude_size:parseInt(g("xlPhudeSize").value)||0, che_cat_dong:!!g("xlCheCatDong").checked, che_chu:!!g("xlChe").checked, che_dong:!!g("xlCheDong").checked, che_khac:!!g("xlCheKhac").checked, long_tieng:!!g("xlDub").checked,
     loi_thoai:g("xlLoiThoai").value||"ocr", model:g("xlModel").value||"medium",
     ref_audio:g("xlGiong").value||"", engine:g("xlEngine").value||"",
     tts:d.tts||"edge",
     voice:(d.tts==="piper"||d.tts==="supertonic")?(g("xlPiperVoice").value||""):(d.tts==="edge"?(g("xlEdgeVoice").value||""):""),
     dich_thu_cong:!!g("xlDichTC").checked, goc_vol:((parseInt(g("xlGocVol").value)||0)/100),
+    accent:g("xlLangTgt").value||"vi",
     tach_nhac:!!g("xlTachNhac").checked, max_speed:parseFloat(g("xlMaxSp").value)||0,
     ratio:g("xlRatio").value||"", chu_de:g("xlChuDe").value||"",
     phong_cach:(typeof pcGet==="function"?pcGet():""),
@@ -7548,7 +7648,7 @@ function wfAutoRender(){
     <div class="hint" style="margin-top:6px">Cần đăng nhập sẵn + máy bật (đóng app thì dừng, mở lại tiếp tục).${auto?" Video mới về sẽ tự render.":""}</div>`;
   if(auto){
     h+=`<details style="margin-top:10px"><summary class="sub" style="cursor:pointer">⚙ Nâng cao</summary><div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap">`+
-      (ch==="cao"?`<button class="chip-add" onclick="wfLichRun()">🧪 Chạy thử cào ngay</button>`:`<button class="chip-add" onclick="wfTdRun()">🧪 Kiểm tra kênh ngay</button>`)+
+      (ch==="cao"?`<button class="chip-add" onclick="wfLichRun()">🧪 Chạy thử tải ngay</button>`:`<button class="chip-add" onclick="wfTdRun()">🧪 Kiểm tra kênh ngay</button>`)+
       `</div></details>`;
   }
   el.innerHTML=h;

@@ -327,7 +327,7 @@ TIER = "free"
 # gói VƯỢT tier trong license_token ĐÃ KÝ Ed25519 (verify bằng public key nhúng — sửa payload = sai chữ ký).
 # Chỉ HẠ (không nâng); không có token verify được (chưa bật ký / standalone / dev) -> tin env như cũ (không vỡ).
 _SIGN_PUB_B64 = "xUufjsVcq6HbRgmD1q31gLCpDLo+6nACDLAySrlJs4Q="   # public key (khớp lic_client._SIGN_PUB_B64)
-_TIER_RANK = {"expired": 0, "free": 1, "trai_nghiem": 2, "co_ban": 3, "pro": 4, "unlimited": 5}
+_TIER_RANK = {"expired": 0, "free": 1, "trai_nghiem": 2, "co_ban": 3, "pro": 4, "unlimited": 5, "lifetime": 6}
 
 
 def _tier_tu_token_ky():
@@ -403,7 +403,7 @@ LOHAPAGE_OK = _khoi_tao_lohapage()
 
 def _can_lohapage():
     """Có quyền dùng LohaPage (Kênh nguồn + Đăng bài) không (cờ server ký, mặc định KHOÁ)."""
-    return LOHAPAGE_OK
+    return LOHAPAGE_OK or TIER in ("pro", "unlimited", "lifetime")
 
 
 def _la_loha_path(path):
@@ -442,8 +442,13 @@ LIMITS = {
                   "clone_tong": 5,    "theodoi_max": 5,    "tro_ly_ai": False, "giong_nang_cao": True,
                   "bam": True, "workflow": True, "theodoi": True},
                   
-    # 4. GÓI NĂM / VĨNH VIỄN - MỞ RỘNG (999k/năm hoặc 1.799k/vĩnh viễn): cào, lồng tiếng, clone và theo dõi không giới hạn + có Trợ lý AI.
+    # 4. GÓI 1 NĂM - MỞ RỘNG (1.999.000đ/năm): cào, lồng tiếng, clone và theo dõi không giới hạn + có Trợ lý AI.
     "unlimited": {"cao_ngay": None, "dub_ngay": None, "dub_phut_ngay": None,
+                  "clone_tong": None, "theodoi_max": None, "tro_ly_ai": True,  "giong_nang_cao": True,
+                  "bam": True, "workflow": True, "theodoi": True},
+
+    # 5. GÓI 2 NĂM - ĐẶC BIỆT (3.499.000đ / 2 năm): cào, lồng tiếng, clone và theo dõi không giới hạn + có Trợ lý AI + render không giới hạn, nâng cấp VIP miễn phí.
+    "lifetime":  {"cao_ngay": None, "dub_ngay": None, "dub_phut_ngay": None,
                   "clone_tong": None, "theodoi_max": None, "tro_ly_ai": True,  "giong_nang_cao": True,
                   "bam": True, "workflow": True, "theodoi": True},
 }
@@ -2618,6 +2623,8 @@ def _crawl_worker(lenh, env, cwd=None, dub_phut=0, dub_out=""):
     try:
         if "--platform" in lenh:
             plat_lr = lenh[lenh.index("--platform") + 1]
+            if plat_lr == "xhs" and env and env.get("MC_XHS_LEAF") == "rednote":
+                plat_lr = "rednote"
     except Exception:
         plat_lr = ""
     so_detail = 0     # số bài đang lấy chi tiết (xhs) — để hiện tiến trình + phát hiện treo
@@ -3631,7 +3638,8 @@ def cao_anh_chon(body):
                 "--input", ",".join(ids), "--count", str(len(ids))]
         threading.Thread(target=_crawl_worker, args=(lenh, env, THU_MUC_GOC), daemon=True).start()
     else:
-        lenh = [PYTHON_VENV, "main.py", "--platform", platform, "--lt", "qrcode",
+        nt_mc = _ap_alias_env(env, platform)
+        lenh = [PYTHON_VENV, "main.py", "--platform", nt_mc, "--lt", "qrcode",
                 "--type", "detail", "--specified_id", ",".join(ids),
                 "--get_comment", "no", "--save_data_option", "jsonl", "--headless", "yes"]
         threading.Thread(target=_crawl_worker, args=(lenh, env), daemon=True).start()
@@ -3826,8 +3834,14 @@ def _lenh_xu_ly(full, o, pha=None):
         lenh.append("--phude")
     if o.get("phude") and o.get("phude_style"):
         lenh += ["--phude-style", str(o["phude_style"])]
+    if o.get("phude") and o.get("phude_size"):
+        lenh += ["--phude-size", str(o["phude_size"])]
+    if o.get("phude") and o.get("che_cat_dong"):
+        lenh.append("--che-cat-dong")
     if not o.get("che_chu", True):
         lenh.append("--no-che")
+    if o.get("che_dong"):
+        lenh.append("--che-dong")
     if o.get("che_khac"):
         lenh.append("--che-khac")
     if o.get("long_tieng"):
@@ -6256,7 +6270,7 @@ def ai_exec_tool(name, args):
             cfg["publish_time"] = {"tat_ca": 0, "1_ngay": 1, "1_tuan": 7, "6_thang": 180}.get(args.get("thoi_gian"), 0)
         chay_crawl(cfg)
         return ("Đã bắt đầu cào trên %s (%s), từ khoá='%s', số lượng=%s. ĐANG CHẠY NỀN (chưa xong). "
-                "Báo người dùng xem tiến trình ở Nhật ký / tab Cào ngay."
+                "Báo người dùng xem tiến trình ở Nhật ký / tab Tìm và tải video."
                 % (_AI_TEN_NEN_TANG.get(nt, nt), cfg["type"], cfg["input"], cfg["count"]))
     if name == "tim_kenh":
         nt = _ai_nen_tang(args.get("nen_tang"))
@@ -7693,6 +7707,8 @@ class Handler(BaseHTTPRequestHandler):
             lenh = [PYTHON_VENV, "localize.py", full, "--model", str(body.get("model", "medium"))]
             if not body.get("che_chu", True):
                 lenh.append("--no-che")
+            if body.get("che_dong"):
+                lenh.append("--che-dong")
             if body.get("che_khac"):
                 lenh.append("--che-khac")
             if body.get("long_tieng"):

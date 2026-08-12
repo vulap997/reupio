@@ -47,6 +47,7 @@ def main():
     # Dịch & lồng tiếng
     ap.add_argument("--phude", action="store_true")
     ap.add_argument("--no-che", action="store_true")
+    ap.add_argument("--che-dong", action="store_true")
     ap.add_argument("--che-khac", action="store_true")
     ap.add_argument("--long-tieng", action="store_true")
     ap.add_argument("--tach-nhac", action="store_true")
@@ -94,6 +95,10 @@ def main():
                     help="Phóng to khung (>1.0 = cắt mép, giữ độ phân giải). 1.0 = giữ nguyên. Vd 1.15 = phóng 115%%.")
     ap.add_argument("--phude-style", dest="phude_style", default="default",
                     help="Kiểu hiển thị caption: default|black_on_white|black_on_yellow|white_on_yellow_black|white_on_black")
+    ap.add_argument("--phude-size", dest="phude_size", type=int, default=0,
+                    help="Cỡ chữ phụ đề (ví dụ 13). 0 = tự động / mặc định")
+    ap.add_argument("--che-cat-dong", dest="che_cat_dong", action="store_true",
+                    help="Tách dòng phụ đề dài thành các nhịp ngắn hơn")
     ap.add_argument("--lang-tag", default="",
                     help="Render đa ngôn ngữ: gắn mã ngôn ngữ (vd 'en','ko') vào tên output → mỗi ngôn ngữ 1 file, không đè.")
     ap.add_argument("--target-lang", dest="target_lang", default="",
@@ -277,8 +282,10 @@ def main():
         # ---- Phụ đề / lồng tiếng (whisper nghe ở TỐC ĐỘ GỐC; tốc độ gộp vào burn) ----
         burn_sub = a.phude or (bool(a.srt_co_san) and not a.long_tieng)
         try:
-            ket = localize.chay(work, model_size=a.model, che_chu=not a.no_che, che_khac=a.che_khac, burn=burn_sub,
+            ket = localize.chay(work, model_size=a.model, che_chu=not a.no_che, che_dong=a.che_dong, che_khac=a.che_khac, burn=burn_sub,
                                 phude_style=a.phude_style,
+                                phude_size=a.phude_size,
+                                che_cat_dong=a.che_cat_dong,
                                 lam_long_tieng=a.long_tieng, lam_tach_nhac=a.tach_nhac,
                                 voice=a.voice, engine=a.engine, srt_co_san=a.srt_co_san,
                                 tach_truoc=a.tach_truoc, ref_audio=a.ref_audio,
