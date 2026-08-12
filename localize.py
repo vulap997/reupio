@@ -1444,7 +1444,7 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
             fc.append(f"[{base}][csb{i}]overlay=W*{sx0:.4f}:H*{sy0:.4f}:enable='between(t,{a:.2f},{b:.2f})'[cso{i}]")
             base = f"cso{i}"
         cur = base
-    elif co_blur:
+    elif co_blur or blur_band:
         # Làm mờ dải sub gốc: tách 1 bản, crop dải, boxblur MẠNH rồi overlay đè lại (phần còn lại nét nguyên).
         # Dải dai_sub hay HẸP/CAO hơn chữ thật (chữ nằm sát đáy) → NỚI cho phủ hết, không thì blur trượt chữ.
         by0, by1, _Hb = blur_band[:3]
@@ -1571,31 +1571,32 @@ def burn_phude(video, vi_srt, out_mp4, che_chu=True, audio_path=None, log_fn=log
                         sub_ass_rel, sub_ass_tmp = _acand, os.path.join(base_dir, _acand)
             except Exception as _e:
                 log_fn("⚠ Ghi file phụ đề theo dải cuối lỗi (%s)" % str(_e)[:50])
-        # TRONG SUỐT (đỡ xấu): dải blur phủ ALPHA (CHE_ALPHA, mặc định 0.85) → ~15% hình gốc lộ nhẹ → dải MỀM,
-        # bớt như thanh kiểm duyệt. Chữ Việt burn ĐÈ lên che phần giữa. Hạ CHE_ALPHA đẹp hơn NHƯNG chữ Trung
-        # có thể lộ mờ (ngược với "che kín" — cân theo gu). blur MẠNH ĐÚNG HỘP text → chữ Hán không đọc được.
-        try:
-            _alpha_default = 0.85 if phude_style == "default" else 1.0
-            _alpha = min(1.0, max(0.3, float(os.environ.get("CHE_ALPHA", "") or _alpha_default)))
-        except ValueError:
-            _alpha = 0.85 if phude_style == "default" else 1.0
-        _mix = "" if _alpha >= 0.999 else f",format=yuva420p,colorchannelmixer=aa={_alpha:.3f}"
-        if phude_style == "default":
-            fc.append(f"[{cur}]split[cmain][cband]")
-            # gblur (gaussian) sigma lớn, KHÔNG vướng giới hạn radius≤kích-thước như boxblur (an toàn mọi hộp).
-            fc.append(f"[cband]crop=iw*{bw:.4f}:ih*{bh:.4f}:iw*{bx0:.4f}:ih*{by0:.4f},gblur=sigma=18:steps=3{_mix}[cbandb]")
-            fc.append(f"[cmain][cbandb]overlay=W*{bx0:.4f}:H*{by0:.4f}[vmsk]")
-        else:
-            _color_map = {
-                "black_on_white": "white",
-                "black_on_yellow": "yellow",
-                "white_on_yellow_black": "yellow",
-                "white_on_black": "black"
-            }
-            _c_name = _color_map.get(phude_style, "black")
-            _c_val = f"{_c_name}@{_alpha:.3f}" if _alpha < 0.999 else _c_name
-            fc.append(f"[{cur}]drawbox=x=iw*{bx0:.4f}:y=ih*{by0:.4f}:w=iw*{bw:.4f}:h=ih*{bh:.4f}:color={_c_val}:t=fill[vmsk]")
-        cur = "vmsk"
+        if co_blur:
+            # TRONG SUỐT (đỡ xấu): dải blur phủ ALPHA (CHE_ALPHA, mặc định 0.85) → ~15% hình gốc lộ nhẹ → dải MỀM,
+            # bớt như thanh kiểm duyệt. Chữ Việt burn ĐÈ lên che phần giữa. Hạ CHE_ALPHA đẹp hơn NHƯNG chữ Trung
+            # có thể lộ mờ (ngược với "che kín" — cân theo gu). blur MẠNH ĐÚNG HỘP text → chữ Hán không đọc được.
+            try:
+                _alpha_default = 0.85 if phude_style == "default" else 1.0
+                _alpha = min(1.0, max(0.3, float(os.environ.get("CHE_ALPHA", "") or _alpha_default)))
+            except ValueError:
+                _alpha = 0.85 if phude_style == "default" else 1.0
+            _mix = "" if _alpha >= 0.999 else f",format=yuva420p,colorchannelmixer=aa={_alpha:.3f}"
+            if phude_style == "default":
+                fc.append(f"[{cur}]split[cmain][cband]")
+                # gblur (gaussian) sigma lớn, KHÔNG vướng giới hạn radius≤kích-thước như boxblur (an toàn mọi hộp).
+                fc.append(f"[cband]crop=iw*{bw:.4f}:ih*{bh:.4f}:iw*{bx0:.4f}:ih*{by0:.4f},gblur=sigma=18:steps=3{_mix}[cbandb]")
+                fc.append(f"[cmain][cbandb]overlay=W*{bx0:.4f}:H*{by0:.4f}[vmsk]")
+            else:
+                _color_map = {
+                    "black_on_white": "white",
+                    "black_on_yellow": "yellow",
+                    "white_on_yellow_black": "yellow",
+                    "white_on_black": "black"
+                }
+                _c_name = _color_map.get(phude_style, "black")
+                _c_val = f"{_c_name}@{_alpha:.3f}" if _alpha < 0.999 else _c_name
+                fc.append(f"[{cur}]drawbox=x=iw*{bx0:.4f}:y=ih*{by0:.4f}:w=iw*{bw:.4f}:h=ih*{bh:.4f}:color={_c_val}:t=fill[vmsk]")
+            cur = "vmsk"
     elif che_chu:
         _color_map = {
             "black_on_white": "white@1.0",
@@ -3272,7 +3273,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
     # Che chữ gốc: DÒ DẢI sub gốc (OpenCV) 1 lần → làm mờ ĐÚNG dải đó (đè sub Việt lên).
     # Không chắc → blur_band=None → burn_phude lùi về hộp đen cố định đáy. Tắt: env CHE_DAI=0.
     blur_band = blur_segs = None
-    if che_chu:
+    if burn or che_chu:
         # QUYẾT ĐỊNH dải che DÙNG CHUNG với preview (dai_sub.detect_blur_band) — cùng logic/fallback/ffmpeg.
         # Cổng "có cần che không" (che_chu/cung_ngon_ngu) GIỮ Ở ĐÂY (nghiệp vụ render); detector chỉ trả "ở đâu".
         import dai_sub
@@ -3310,7 +3311,7 @@ def chay(video, model_size="medium", che_chu=True, che_khac=False, burn=True,
             blur_band = (_r["y0"], _r["y1"], _r["H"],
                          _r.get("x0", 0.0), _r.get("x1", 1.0))   # +x0,x1 → blur ĐÚNG HỘP text (không full-width)
         
-        if blur_band is None:
+        if blur_band is None and che_chu:
             # Fallback mặc định khi không dò được dải chữ Trung (nhưng vẫn tích Che chữ)
             _is_manual = True  # Bỏ qua kéo sát đáy CHE_DAY và kẹp cứng đẩy xuống đáy
             _W, _H = 0, 0
